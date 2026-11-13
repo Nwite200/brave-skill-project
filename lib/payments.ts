@@ -77,7 +77,7 @@ export async function fulfillOrder(orderId: string, options?: { gatewayReference
       ON CONFLICT ("userId", "courseId") DO UPDATE SET
         "status" = 'ACTIVE', "pricePaidKobo" = excluded."pricePaidKobo",
         "source" = excluded."source", "orderId" = excluded."orderId",
-        "lastAccessedAt" = excluded."lastAccessedAt'`)
+        "lastAccessedAt" = excluded."lastAccessedAt"`)
       .bind(enrollmentId, order.userId, order.courseId, order.amountKobo, order.gateway,
         order.id, now.toISOString(), order.id, now.toISOString()),
     ...(order.couponId ? [d1.prepare(`UPDATE "Coupon" SET "uses" = "uses" + 1

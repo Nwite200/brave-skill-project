@@ -44,7 +44,7 @@ npx wrangler secret put RESEND_API_KEY
 
 Set non-secret variables in `wrangler.jsonc`, including `CF_WORKER=1` and `R2_BUCKET=brave-skill-media`.
 
-D1 is supplied through the DB binding declared in wrangler.jsonc. The seed script uses CLOUDFLARE_D1_TOKEN, CLOUDFLARE_ACCOUNT_ID and CLOUDFLARE_DATABASE_ID from your local .env file. R2 credentials are used by the existing S3-compatible R2 storage client. The Worker refuses to fall back to local filesystem storage if R2 is not configured.
+D1 is supplied through the DB binding declared in wrangler.jsonc. The seed script uses CLOUDFLARE_D1_TOKEN, CLOUDFLARE_ACCOUNT_ID and CLOUDFLARE_DATABASE_ID from your local .env file only; these are not Worker runtime secrets. R2 credentials are used by the existing S3-compatible R2 storage client. The Worker refuses to fall back to local filesystem storage if R2 is not configured.
 
 ## 3. Create the D1 schema
 

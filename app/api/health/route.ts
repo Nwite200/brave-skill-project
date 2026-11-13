@@ -1,29 +1,19 @@
 import { NextResponse } from "next/server";
-import { db } from "@/lib/db";
 
-export const runtime = "nodejs";
+// Frontend-first deployment health check. Database-backed functionality is
+// intentionally reported as not configured until the D1 resource is added.
+export const runtime = "edge";
 export const dynamic = "force-dynamic";
 
 export async function GET() {
-  const started = Date.now();
-  let database = "down";
-  try {
-    await db.$queryRaw`SELECT 1`;
-    database = "up";
-  } catch {
-    database = "down";
-  }
-
-  const healthy = database === "up";
   return NextResponse.json(
     {
-      status: healthy ? "ok" : "degraded",
+      status: "ok",
       service: "brave-skill",
-      database,
-      latencyMs: Date.now() - started,
+      frontend: "up",
+      database: "not-configured",
       timestamp: new Date().toISOString(),
-      version: process.env.npm_package_version || "1.0.0",
     },
-    { status: healthy ? 200 : 503, headers: { "Cache-Control": "no-store" } },
+    { status: 200, headers: { "Cache-Control": "no-store" } },
   );
 }

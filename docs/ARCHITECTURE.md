@@ -3,7 +3,7 @@
 ## Overview
 
 Brave Skill is a single Next.js application that serves four surfaces from one
-codebase and one PostgreSQL database:
+codebase and one Cloudflare D1 database:
 
 1. **Public marketing website** — server-rendered, SEO-indexed, cached with ISR.
 2. **Student portal** — authenticated, dynamic, personalised.
@@ -14,13 +14,13 @@ codebase and one PostgreSQL database:
 Browser / Flutter
         │  HTTPS
         ▼
-   Next.js (Node runtime)
+   Next.js (Cloudflare Workers runtime)
    ├── React Server Components (public, dashboard, admin)
    ├── Route handlers /api/*   (auth, payments, learning, admin, media)
    ├── Middleware              (session + role gate)
    └── Prisma ORM
         │
-        ├── PostgreSQL          (all business data)
+        ├── Cloudflare D1       (all business data)
         └── Private storage     (videos, PDFs, APK)
 ```
 
@@ -158,7 +158,7 @@ app on the next catalogue load — no app update required.
 
 - The app is stateless apart from local media; run multiple instances behind a load
   balancer after moving media to object storage.
-- Enable PostgreSQL connection pooling (PgBouncer or Prisma Accelerate) for >100
+- Use Cloudflare D1 and R2 bindings; payment fulfilment and refunds use D1 batch operations for atomic state changes. Avoid assuming Prisma interactive transactions are supported by D1.
   concurrent learners.
 - Rate limiting is database-backed and works across instances; swap to Redis for
   high traffic.

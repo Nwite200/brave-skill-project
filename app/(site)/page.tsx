@@ -1,8 +1,6 @@
 import Link from "next/link";
 import { ArrowRight, GraduationCap, ShieldCheck, Sparkles } from "lucide-react";
-import { db } from "@/lib/db";
 import { getSettings } from "@/lib/settings";
-import { listPublishedCourses } from "@/lib/courses";
 import { Hero } from "@/components/marketing/Hero";
 import {
   AppPromo,
@@ -17,22 +15,18 @@ import {
   WhySection,
 } from "@/components/marketing/HomeSections";
 
-// This page queries PostgreSQL. Render it on the Worker at request time rather
-// than trying to access production data during the build/prerender phase.
+// Public landing page is database-independent for the initial frontend launch.
 export const dynamic = "force-dynamic";
 
 export default async function HomePage() {
-  const [settings, featured, categories, testimonials, faqs] = await Promise.all([
-    getSettings(),
-    listPublishedCourses({ limit: 3, order: "popular" }),
-    db.category.findMany({
-      where: { isActive: true },
-      orderBy: { position: "asc" },
-      include: { _count: { select: { courses: { where: { isPublished: true } } } } },
-    }),
-    db.testimonial.findMany({ where: { isPublished: true }, orderBy: { position: "asc" }, take: 3 }),
-    db.faq.findMany({ where: { isPublished: true }, orderBy: { position: "asc" }, take: 5 }),
-  ]);
+  // Frontend-first launch: render the public marketing experience without
+  // requiring a database. Dynamic academy content will be enabled after D1
+  // is provisioned and connected.
+  const settings = await getSettings();
+  const featured: never[] = [];
+  const categories: never[] = [];
+  const testimonials: never[] = [];
+  const faqs: never[] = [];
 
   return (
     <>

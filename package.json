@@ -2,20 +2,20 @@
   "name": "brave-skill",
   "version": "1.0.0",
   "private": true,
-  "description": "Brave Skill Skill Acquisition Academy \u2014 learning platform by Emyphill-Tech Global Solutions Limited",
+  "description": "Brave Skill Skill Acquisition Academy — learning platform by Emyphill-Tech Global Solutions Limited",
   "scripts": {
     "dev": "next dev",
     "build": "prisma generate && next build",
     "start": "next start",
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
-    "db:push": "prisma db push",
-    "db:migrate": "prisma migrate dev",
-    "db:deploy": "prisma migrate deploy",
+    "db:push": "npm run db:d1:generate && npm run db:d1:apply",
+    "db:migrate": "npm run db:d1:generate && npm run db:d1:apply",
+    "db:deploy": "npm run db:d1:apply",
     "db:seed": "tsx prisma/seed.ts",
     "db:studio": "prisma studio",
     "db:reset": "prisma migrate reset --force && npm run db:seed",
-    "setup": "npm run db:push && npm run db:seed",
+    "setup": "npm run db:d1:generate && npm run db:d1:apply",
     "db:backup": "bash scripts/backup-db.sh",
     "db:restore": "bash scripts/restore-db.sh",
     "brand:assets": "node scripts/brand-assets.mjs",
@@ -27,13 +27,14 @@
     "cf:deploy": "opennextjs-cloudflare deploy",
     "cf:upload": "opennextjs-cloudflare upload",
     "intro:render": "node scripts/render-intro.mjs",
-    "build:worker": "prisma generate && opennextjs-cloudflare build"
+    "build:worker": "prisma generate && opennextjs-cloudflare build",
+    "db:d1:generate": "mkdir -p migrations && prisma migrate diff --from-empty --to-schema-datamodel prisma/schema.prisma --script > migrations/0001_initial.sql",
+    "db:d1:apply": "wrangler d1 migrations apply brave-skill-db --remote"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"
   },
   "dependencies": {
-    "@prisma/adapter-pg": "^6.19.3",
     "@prisma/client": "6.19.3",
     "aws4fetch": "^1.0.20",
     "bcryptjs": "^3.0.2",
@@ -43,13 +44,12 @@
     "lucide-react": "^0.546.0",
     "next": "^15.5.29",
     "pdf-lib": "^1.17.1",
-    "pg": "^8.23.1",
-    "pg-cloudflare": "^1.4.1",
     "qrcode": "^1.5.4",
     "react": "19.1.0",
     "react-dom": "19.1.0",
     "tailwind-merge": "^3.3.1",
-    "zod": "^4.1.12"
+    "zod": "^4.1.12",
+    "@prisma/adapter-d1": "6.19.3"
   },
   "devDependencies": {
     "@opennextjs/cloudflare": "^1.20.17",

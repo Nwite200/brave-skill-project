@@ -280,6 +280,7 @@ deployment.
 | No local filesystem | `lib/storage.ts` switches to R2 when `R2_*` is configured |
 | Workers AI free quota | The assistant falls back to the grounded engine if quota is exhausted |
 | No SMTP sockets | Email uses Resend's HTTP API (`lib/mail.ts`) |
+| Cloudflare Stream | Optional paid upgrade; adapter exists but stays disabled until owner approval and secrets are added |
 
 ---
 

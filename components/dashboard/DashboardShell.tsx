@@ -10,6 +10,7 @@ import {
   CreditCard,
   GraduationCap,
   LayoutDashboard,
+  LifeBuoy,
   LogOut,
   Menu,
   Search,
@@ -28,6 +29,7 @@ const NAV = [
   { href: "/dashboard/certificates", label: "Certificates", icon: GraduationCap },
   { href: "/dashboard/payments", label: "Payments", icon: CreditCard },
   { href: "/dashboard/notifications", label: "Notifications", icon: Bell },
+  { href: "/dashboard/support", label: "Support", icon: LifeBuoy },
   { href: "/dashboard/settings", label: "Settings", icon: Settings },
 ];
 
@@ -83,7 +85,7 @@ export function DashboardShell({
           <p className="mb-2 px-2 text-[9px] font-semibold uppercase tracking-[0.2em] text-[#4F5B6E]">Discover</p>
           <Link href="/courses" className="admin-link"><Search size={15} /><span>Browse catalogue</span></Link>
           <Link href="/download" className="admin-link"><Sparkles size={15} /><span>Android app</span></Link>
-          <Link href="/contact" className="admin-link"><Settings size={15} /><span>Help & support</span></Link>
+          <Link href="/dashboard/support" className="admin-link"><LifeBuoy size={15} /><span>Help & support</span></Link>
         </nav>
 
         <div className="border-t border-white/[0.06] p-3">

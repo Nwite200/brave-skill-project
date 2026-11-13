@@ -196,6 +196,13 @@ No location, contacts, camera, microphone, SMS or background tracking.
 
 ---
 
+## 7b. Screen protection
+
+The Android activity sets `FLAG_SECURE`, which blocks screenshots and screen recording
+while the app is open. This protects paid course videos from casual capture; it does not
+prevent filming with another device. Protected playback also requires an active session
+and server-side enrolment.
+
 ## 8. Testing checklist
 
 - [ ] Splash animation and transition to login.

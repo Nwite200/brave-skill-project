@@ -1,6 +1,16 @@
 package ng.com.emyphilltech.braveskill
 
-import io.flutter.embedding.android.FlutterFragmentActivity
+import android.os.Bundle
+import android.view.WindowManager
+import io.flutter.embedding.android.FlutterActivity
 
-// local_auth's BiometricPrompt needs a FragmentActivity.
-class MainActivity : FlutterFragmentActivity()
+class MainActivity : FlutterActivity() {
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        // Prevent screenshots and screen recording of protected course videos.
+        window.setFlags(
+            WindowManager.LayoutParams.FLAG_SECURE,
+            WindowManager.LayoutParams.FLAG_SECURE
+        )
+    }
+}

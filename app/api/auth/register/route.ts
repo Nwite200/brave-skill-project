@@ -6,6 +6,7 @@ import { registerSchema } from "@/lib/validation";
 import { audit, notify } from "@/lib/audit";
 import { sendMail, emailShell } from "@/lib/mail";
 import { env } from "@/lib/env";
+import crypto from "crypto";
 
 export const runtime = "nodejs";
 
@@ -19,6 +20,10 @@ export const POST = route(async (req: NextRequest) => {
   const existing = await db.user.findUnique({ where: { email: data.email } });
   if (existing) return fail("An account with this email already exists. Try signing in instead.", 409);
 
+  const referrer = data.referralCode
+    ? await db.user.findUnique({ where: { referralCode: data.referralCode.trim().toUpperCase() }, select: { id: true } })
+    : null;
+
   const user = await db.user.create({
     data: {
       name: data.name,
@@ -26,6 +31,8 @@ export const POST = route(async (req: NextRequest) => {
       phone: data.phone || null,
       passwordHash: await hashPassword(data.password),
       role: "STUDENT",
+      referredById: referrer?.id ?? null,
+      referralCode: `${data.name.toUpperCase().replace(/[^A-Z0-9]+/g, "").slice(0, 10) || "BRAVE"}-${crypto.randomBytes(3).toString("hex").toUpperCase()}`,
     },
   });
 

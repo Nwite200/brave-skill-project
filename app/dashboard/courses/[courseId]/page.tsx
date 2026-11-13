@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import { requireUser } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { percent } from "@/lib/format";
+import { getCourseProgression } from "@/lib/progression";
 import { LessonPlayer } from "@/components/learning/LessonPlayer";
 
 export const dynamic = "force-dynamic";
@@ -65,9 +66,19 @@ export default async function LearnPage({
   }
 
   const progressMap = new Map(enrollment.progress.map((p) => [p.lessonId, p]));
+  const progression = await getCourseProgression({ courseId, userId: user.id });
+  const moduleState = new Map(progression.modules.map((module) => [module.id, module]));
+  const lessonModule = new Map(course.modules.flatMap((module) => module.lessons.map((lesson) => [lesson.id, module.id])));
+  const isLessonLocked = (lessonId: string) => {
+    const moduleId = lessonModule.get(lessonId);
+    return moduleId ? Boolean(moduleState.get(moduleId)?.locked) : false;
+  };
+
+  const requestedLesson = lessons.find((l) => l.id === query.lesson);
   const activeLesson =
-    lessons.find((l) => l.id === query.lesson) ||
-    lessons.find((l) => !progressMap.get(l.id)?.completed) ||
+    (requestedLesson && !isLessonLocked(requestedLesson.id) ? requestedLesson : undefined) ||
+    lessons.find((l) => !progressMap.get(l.id)?.completed && !isLessonLocked(l.id)) ||
+    lessons.find((l) => !isLessonLocked(l.id)) ||
     lessons[0];
 
   const index = lessons.findIndex((l) => l.id === activeLesson.id);
@@ -111,10 +122,13 @@ export default async function LearnPage({
         videoUrl: activeLesson.videoUrl,
         content: activeLesson.content,
         isPreview: activeLesson.isPreview,
+        videoProvider: activeLesson.videoAsset?.provider || (activeLesson.videoUrl ? "external" : "local"),
       }}
       completed={Boolean(progress?.completed)}
       watchedSeconds={progress?.watchedSeconds || 0}
-      nextLessonId={lessons[index + 1]?.id || null}
+      nextLessonId={
+        lessons[index + 1] && !isLessonLocked(lessons[index + 1].id) ? lessons[index + 1].id : null
+      }
       prevLessonId={lessons[index - 1]?.id || null}
       courseId={course.id}
       courseTitle={course.title}
@@ -122,24 +136,37 @@ export default async function LearnPage({
         id: m.id,
         title: m.title,
         position: m.position,
+        locked: Boolean(moduleState.get(m.id)?.locked),
+        quizId: moduleState.get(m.id)?.quizId || null,
+        quizPassed: Boolean(moduleState.get(m.id)?.quizPassed),
+        quizRequired: Boolean(moduleState.get(m.id)?.quizRequired),
         lessons: m.lessons.map((l) => ({
           id: l.id,
           title: l.title,
           type: l.type,
           durationSeconds: l.durationSeconds,
           isPreview: l.isPreview,
+          locked: isLessonLocked(l.id),
+          completed: Boolean(progressMap.get(l.id)?.completed),
         })),
       }))}
       activeLessonId={activeLesson.id}
       progressPercent={percent(completedCount, lessons.length)}
-      quizzes={course.quizzes.map((q) => ({
-        id: q.id,
-        title: q.title,
-        type: q.type,
-        questionCount: q._count.questions,
-        passed: passedMap.get(q.id) ?? false,
-      }))}
+      quizzes={course.quizzes.map((q) => {
+        const quizModule = q.moduleId ? moduleState.get(q.moduleId) : null;
+        return {
+          id: q.id,
+          title: q.title,
+          type: q.type,
+          questionCount: q._count.questions,
+          passed: passedMap.get(q.id) ?? false,
+          moduleId: q.moduleId || null,
+          locked: q.type === "EXAM" ? !progression.examAvailable : Boolean(quizModule?.locked || (quizModule && !quizModule.lessonsComplete)),
+          required: q.isRequired,
+        };
+      })}
       nextCourseLessonHref={nextCourseHref}
+      studentEmail={user.email}
     />
   );
 }

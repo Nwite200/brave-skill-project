@@ -178,6 +178,32 @@ a payment unless the order is `PAID`.
 
 ---
 
+## Reviews, discussion, support and referrals
+
+| Method | Path | Auth | Description |
+| --- | --- | --- | --- |
+| GET/POST | `/courses/[slug]/reviews` | public / enrolled | Published reviews or submit a verified review |
+| GET/POST | `/courses/[slug]/discussion` | enrolled | List or create course discussions |
+| GET/POST | `/discussion/[threadId]/posts` | enrolled | Read or add replies |
+| GET/POST | `/support` | student | List or create support tickets |
+| GET | `/me/referral` | student | Referral code, link and signup count |
+
+Review body: `{ "rating": 1-5, "title": "Optional", "body": "..." }`.
+Support body: `{ "subject": "...", "message": "..." }`.
+
+## Video and Stream
+
+| Method | Path | Auth | Description |
+| --- | --- | --- | --- |
+| GET | `/admin/stream/status` | staff | Stream configuration state |
+| POST | `/admin/stream/upload-url` | staff | Resumable direct upload URL |
+| POST | `/admin/stream/complete` | staff | Register/attach a Stream video |
+| DELETE | `/admin/stream/[uid]` | staff | Delete a Stream video |
+| GET | `/stream/[lessonId]` | student | Signed playback for an entitled lesson |
+| POST | `/admin/videos/attach` | staff | Attach an existing video to a lesson |
+
+---
+
 ## Administrator
 
 All endpoints require `ADMIN`/`MASTER_ADMIN`; content endpoints also allow

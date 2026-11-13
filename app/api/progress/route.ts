@@ -4,6 +4,7 @@ import { json, parseJson, route, fail } from "@/lib/api";
 import { requireUser } from "@/lib/auth";
 import { progressSchema } from "@/lib/validation";
 import { issueCertificate } from "@/lib/certificates";
+import { lessonAccess } from "@/lib/progression";
 
 export const runtime = "nodejs";
 
@@ -17,6 +18,16 @@ export const POST = route(async (req: NextRequest) => {
     include: { module: { include: { course: true } } },
   });
   if (!lesson || !lesson.isPublished) return fail("Lesson not found.", 404);
+
+  const access = await lessonAccess(user, lesson.id);
+  if (!access.allowed) {
+    return fail(
+      access.reason === "module_locked"
+        ? "This lesson is locked. Complete the previous module and pass its required quiz first."
+        : "You are not enrolled in this course.",
+      403,
+    );
+  }
 
   const courseId = lesson.module.courseId;
   const enrollment = await db.enrollment.findUnique({

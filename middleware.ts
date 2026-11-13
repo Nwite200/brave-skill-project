@@ -3,15 +3,15 @@ import { jwtVerify } from "jose";
 
 const SESSION_COOKIE = "bs_session";
 
-const secret = () =>
-  new TextEncoder().encode(process.env.AUTH_SECRET || "dev-only-secret-change-me-4f8b0f0c1d2e3a4b5c6d7e8f9a0b1c2d");
+const authSecret = process.env.AUTH_SECRET || "";
+const secret = () => new TextEncoder().encode(authSecret);
 
 export async function middleware(req: NextRequest) {
   const { pathname, search } = req.nextUrl;
   const token = req.cookies.get(SESSION_COOKIE)?.value;
 
   let session: { role?: string } | null = null;
-  if (token) {
+  if (token && authSecret.length >= 32) {
     try {
       const { payload } = await jwtVerify(token, secret(), {
         issuer: "brave-skill",

@@ -2,7 +2,7 @@
   "name": "brave-skill",
   "version": "1.0.0",
   "private": true,
-  "description": "Brave Skill Skill Acquisition Academy \u2014 learning platform by Emyphill-Tech Global Solutions Limited",
+  "description": "Brave Skill Skill Acquisition Academy — learning platform by Emyphill-Tech Global Solutions Limited",
   "scripts": {
     "dev": "next dev",
     "build": "prisma generate && next build",
@@ -49,6 +49,7 @@
     "react": "19.1.0",
     "react-dom": "19.1.0",
     "tailwind-merge": "^3.3.1",
+    "tus-js-client": "^4.3.1",
     "zod": "^4.1.12"
   },
   "devDependencies": {

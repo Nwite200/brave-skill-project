@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { AlertCircle, ArrowRight, Check, Eye, EyeOff, Loader2 } from "lucide-react";
 
 const rules = [
@@ -13,11 +13,16 @@ const rules = [
 
 export function RegisterForm() {
   const router = useRouter();
-  const [form, setForm] = useState({ name: "", email: "", phone: "", password: "" });
+  const [form, setForm] = useState({ name: "", email: "", phone: "", password: "", referralCode: "" });
   const [show, setShow] = useState(false);
   const [accepted, setAccepted] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    const ref = new URLSearchParams(window.location.search).get("ref");
+    if (ref) setForm((prev) => ({ ...prev, referralCode: ref.toUpperCase() }));
+  }, []);
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -76,6 +81,11 @@ export function RegisterForm() {
             <label htmlFor="phone" className="label">Phone <span className="text-[#5F6B7E]">(optional)</span></label>
             <input id="phone" type="tel" autoComplete="tel" className="field" placeholder="+234 800 000 0000" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} />
           </div>
+        </div>
+
+        <div>
+          <label htmlFor="referral" className="label">Referral code <span className="text-[#5F6B7E]">(optional)</span></label>
+          <input id="referral" className="field" placeholder="From a friend" value={form.referralCode} onChange={(e) => setForm({ ...form, referralCode: e.target.value.toUpperCase() })} />
         </div>
 
         <div>

@@ -5,6 +5,7 @@ import { requireUser } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { percent } from "@/lib/format";
 import { CourseCover } from "@/components/ui/CourseCard";
+import { getCourseProgression } from "@/lib/progression";
 
 export const metadata: Metadata = { title: "Quizzes & exams" };
 export const dynamic = "force-dynamic";
@@ -18,7 +19,7 @@ export default async function AssessmentsPage() {
       course: {
         include: {
           category: { select: { name: true, accent: true } },
-          modules: { select: { lessons: { where: { isPublished: true }, select: { id: true } } } },
+          modules: { select: { id: true, title: true, position: true, lessons: { where: { isPublished: true }, select: { id: true } } } },
           quizzes: {
             where: { isPublished: true },
             orderBy: { createdAt: "asc" },
@@ -49,17 +50,36 @@ export default async function AssessmentsPage() {
     });
   }
 
+  const progressions = await Promise.all(
+    enrollments.map((enrollment) => getCourseProgression({ courseId: enrollment.courseId, userId: user.id })),
+  );
+  const moduleStateByCourse = new Map(
+    enrollments.map((enrollment, index) => [
+      enrollment.courseId,
+      new Map(progressions[index].modules.map((module) => [module.id, module])),
+    ]),
+  );
+  const examAvailableByCourse = new Map(enrollments.map((enrollment, index) => [enrollment.courseId, progressions[index].examAvailable]));
+
   const items = enrollments.flatMap((enrollment) => {
     const totalLessons = enrollment.course.modules.reduce((s, m) => s + m.lessons.length, 0);
     const done = enrollment.progress.filter((p) => p.completed).length;
-    return enrollment.course.quizzes.map((quiz) => ({
-      quiz,
-      course: enrollment.course,
-      done,
-      totalLessons,
-      attempt: attemptMap.get(quiz.id),
-      locked: quiz.type === "EXAM" && done < totalLessons,
-    }));
+    const modules = moduleStateByCourse.get(enrollment.courseId);
+    return enrollment.course.quizzes.map((quiz) => {
+      const module = quiz.moduleId ? modules?.get(quiz.moduleId) : null;
+      return {
+        quiz,
+        course: enrollment.course,
+        done,
+        totalLessons,
+        attempt: attemptMap.get(quiz.id),
+        moduleTitle: module?.title || null,
+        locked:
+          quiz.type === "EXAM"
+            ? !examAvailableByCourse.get(enrollment.courseId)
+            : Boolean(module?.locked || (module && !module.lessonsComplete)),
+      };
+    });
   });
 
   return (
@@ -71,14 +91,14 @@ export default async function AssessmentsPage() {
 
       {items.length ? (
         <div className="mt-6 space-y-3">
-          {items.map(({ quiz, course, done, totalLessons, attempt, locked }) => (
+          {items.map(({ quiz, course, done, totalLessons, attempt, locked, moduleTitle }) => (
             <div key={quiz.id} className="flex flex-col gap-4 rounded-2xl border border-white/[0.07] bg-[#0B0E18] p-4 sm:flex-row sm:items-center">
               <CourseCover compact title={course.title} accent={course.category?.accent || "#873BFF"} category={course.category?.name || "Course"} className="h-14 w-20 shrink-0 rounded-xl border border-white/10" />
 
               <div className="min-w-0 flex-1">
                 <div className="flex flex-wrap items-center gap-2">
                   <span className={`rounded-full border px-2 py-0.5 text-[8.5px] font-semibold uppercase tracking-[0.1em] ${quiz.type === "EXAM" ? "border-[#873BFF]/25 bg-[#873BFF]/10 text-[#C9B8FF]" : "border-[#20D9E8]/25 bg-[#20D9E8]/10 text-[#7FE9F2]"}`}>
-                    {quiz.type === "EXAM" ? "Final exam" : "Quiz"}
+                    {quiz.type === "EXAM" ? "Final exam" : moduleTitle ? "Module quiz" : "Quiz"}
                   </span>
                   {attempt?.passed && <span className="flex items-center gap-1 text-[9px] text-emerald-300"><CheckCircle2 size={10} /> Passed</span>}
                 </div>
@@ -89,13 +109,14 @@ export default async function AssessmentsPage() {
                   <span>Pass mark {quiz.passMark}%</span>
                   <span className="flex items-center gap-1"><Clock3 size={10} /> {quiz.timeLimitMinutes ? `${quiz.timeLimitMinutes} min` : "No limit"}</span>
                   {quiz.type === "EXAM" && <span>{done}/{totalLessons} lessons complete</span>}
+                  {moduleTitle && <span>{moduleTitle}</span>}
                   {attempt && <span className="text-[#C2CCDD]">Best {attempt.percent}%</span>}
                 </div>
               </div>
 
               <div className="flex shrink-0 items-center gap-2">
                 {locked ? (
-                  <span className="flex items-center gap-1.5 rounded-full border border-white/10 px-3 py-1.5 text-[10px] text-[#6F7C90]"><Lock size={10} /> Complete lessons</span>
+                  <span className="flex items-center gap-1.5 rounded-full border border-white/10 px-3 py-1.5 text-[10px] text-[#6F7C90]"><Lock size={10} /> {quiz.type === "EXAM" ? "Complete modules" : "Complete module"}</span>
                 ) : attempt?.passed ? (
                   <Link href={`/dashboard/certificates`} className="btn btn-ghost btn-sm h-8">Certificate</Link>
                 ) : (

@@ -25,7 +25,7 @@ export const DEFAULT_SETTINGS: Record<string, string> = {
   "stats.courses": "5",
   "stats.certificates": "3,200",
   "stats.instructors": "12",
-  "app.version": "1.1.0",
+  "app.version": "1.2.0",
   "app.size": "—",
   "app.url": "",
   "app.requires": "Android 8.0 and above",

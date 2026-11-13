@@ -27,7 +27,15 @@ export const POST = route(async (req: NextRequest, ctx) => {
   }
 
   try {
-    const record = await (db as unknown as AnyDb)[config.model].create({ data: transformed });
+    let record = await (db as unknown as AnyDb)[config.model].create({ data: transformed });
+
+    if (resource === "apk" && transformed.assetId) {
+      const asset = await db.asset.findUnique({ where: { id: String(transformed.assetId) }, select: { sizeBytes: true } });
+      const id = (record as { id?: string })?.id;
+      if (asset && id) {
+        record = await db.apkRelease.update({ where: { id }, data: { sizeBytes: asset.sizeBytes } });
+      }
+    }
 
     if (resource === "announcements" && (record as { isPublished?: boolean }).isPublished) {
       const announcement = record as { id: string; title: string; body: string; audience: string; courseId: string | null };

@@ -15,21 +15,23 @@ export default async function AdminExaminationsPage({
   const admin = isAdmin(user.role);
   const params = await searchParams;
 
-  const [quizzes, courses] = await Promise.all([
+  const [quizzes, courses, modules] = await Promise.all([
     db.quiz.findMany({
       where: {
         ...(admin ? {} : { course: { instructorId: user.id } }),
         ...(params.course ? { courseId: params.course } : {}),
       },
       orderBy: { createdAt: "desc" },
-      include: { course: { select: { title: true, id: true } }, _count: { select: { questions: true } } },
+      include: { course: { select: { title: true, id: true } }, module: { select: { title: true } }, _count: { select: { questions: true } } },
     }),
     db.course.findMany({ where: admin ? {} : { instructorId: user.id }, orderBy: { title: "asc" }, select: { id: true, title: true } }),
+    db.module.findMany({ where: admin ? {} : { course: { instructorId: user.id } }, orderBy: [{ course: { title: "asc" } }, { position: "asc" }], select: { id: true, title: true, courseId: true } }),
   ]);
 
   return (
     <QuizManager
       courses={courses}
+      modules={modules}
       quizzes={quizzes.map((quiz) => ({
         id: quiz.id,
         title: quiz.title,
@@ -40,6 +42,8 @@ export default async function AdminExaminationsPage({
         isPublished: quiz.isPublished,
         courseTitle: quiz.course.title,
         courseId: quiz.course.id,
+        moduleName: quiz.moduleId ? (modules.find((m) => m.id === quiz.moduleId)?.title || null) : null,
+        isRequired: quiz.isRequired,
       }))}
     />
   );

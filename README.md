@@ -26,7 +26,7 @@ Learn. Practice. Build.
 | Payments | Paystack (NGN) + webhook HMAC validation |
 | Documents | `pdf-lib` certificates and receipts |
 | Media | Cloudflare R2 (S3 API) with authorised streaming; local filesystem fallback |
-| Mobile | Flutter 3 (Android) |
+| Mobile | Flutter 3 (Android), FLAG_SECURE screen protection |
 | Deployment | Cloudflare Workers (OpenNext), R2, Hyperdrive, DNS |
 
 ---
@@ -181,6 +181,9 @@ See [`docs/SECURITY.md`](docs/SECURITY.md).
 - [Cloudflare deployment](docs/CLOUDFLARE.md)
 - [Cinematic brand intro](docs/BRAND-INTRO.md)
 - [Brave AI Assistant](docs/AI-AGENT.md)
+- [Video & Cloudflare Stream](docs/VIDEO.md)
+- [Security report](docs/SECURITY-REPORT.md)
+- [Audit & delivery plan](docs/AUDIT.md)
 - [Deployment (Node/VPS fallback)](docs/DEPLOYMENT.md)
 - [Administrator guide](docs/ADMIN-GUIDE.md)
 - [API reference](docs/API.md)

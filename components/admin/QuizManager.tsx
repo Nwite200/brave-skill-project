@@ -15,25 +15,36 @@ type QuizRow = {
   isPublished: boolean;
   courseTitle: string;
   courseId: string;
+  moduleName: string | null;
+  isRequired: boolean;
 };
+
+type ModuleOption = { id: string; title: string; courseId: string };
 
 export function QuizManager({
   quizzes,
   courses,
+  modules,
 }: {
   quizzes: QuizRow[];
   courses: { id: string; title: string }[];
+  modules: ModuleOption[];
 }) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState({
     courseId: courses[0]?.id || "",
+    moduleId: "",
     title: "",
     description: "",
-    type: "EXAM" as "QUIZ" | "EXAM",
-    passMark: 60,
-    timeLimitMinutes: 0,
-    maxAttempts: 0,
+    type: "QUIZ" as "QUIZ" | "EXAM",
+    passMark: 70,
+    timeLimitMinutes: 20,
+    maxAttempts: 2,
+    questionCount: 10,
+    randomizeQuestions: true,
+    randomizeOptions: true,
+    isRequired: true,
     isPublished: true,
   });
   const [busy, setBusy] = useState(false);
@@ -132,9 +143,17 @@ export function QuizManager({
             <div className="mt-4 space-y-3">
               <div>
                 <label className="label">Course</label>
-                <select className="field h-10 text-[12px]" value={form.courseId} onChange={(e) => setForm({ ...form, courseId: e.target.value })}>
+                <select className="field h-10 text-[12px]" value={form.courseId} onChange={(e) => setForm({ ...form, courseId: e.target.value, moduleId: "" })}>
                   {courses.map((c) => <option key={c.id} value={c.id}>{c.title}</option>)}
                 </select>
+              </div>
+              <div>
+                <label className="label">Module / assessment scope</label>
+                <select className="field h-10 text-[12px]" value={form.moduleId} onChange={(e) => setForm({ ...form, moduleId: e.target.value })}>
+                  <option value="">Course-level (final exam or practice)</option>
+                  {modules.filter((m) => m.courseId === form.courseId).map((m) => <option key={m.id} value={m.id}>{m.title}</option>)}
+                </select>
+                <p className="mt-1 text-[9px] text-[#5F6B7E]">Attach a quiz to a module to unlock the next module after a pass.</p>
               </div>
               <div><label className="label">Title</label><input required className="field h-10 text-[12px]" value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} placeholder="Final assessment" /></div>
               <div><label className="label">Description</label><textarea rows={2} className="field text-[12px]" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} /></div>
@@ -149,7 +168,16 @@ export function QuizManager({
                 <div><label className="label">Pass mark (%)</label><input type="number" min={0} max={100} className="field h-10 text-[12px]" value={form.passMark} onChange={(e) => setForm({ ...form, passMark: Number(e.target.value) })} /></div>
                 <div><label className="label">Time limit (min)</label><input type="number" min={0} className="field h-10 text-[12px]" value={form.timeLimitMinutes} onChange={(e) => setForm({ ...form, timeLimitMinutes: Number(e.target.value) })} /></div>
                 <div><label className="label">Max attempts</label><input type="number" min={0} className="field h-10 text-[12px]" value={form.maxAttempts} onChange={(e) => setForm({ ...form, maxAttempts: Number(e.target.value) })} /></div>
+                <div><label className="label">Questions per attempt</label><input type="number" min={0} className="field h-10 text-[12px]" value={form.questionCount} onChange={(e) => setForm({ ...form, questionCount: Number(e.target.value) })} /></div>
+                <div className="flex flex-col justify-end gap-1.5 pb-1 text-[10px] text-[#C2CCDD]">
+                  <label className="flex items-center gap-2"><input type="checkbox" checked={form.randomizeQuestions} onChange={(e) => setForm({ ...form, randomizeQuestions: e.target.checked })} className="h-3.5 w-3.5 accent-[#873BFF]" /> Randomise questions</label>
+                  <label className="flex items-center gap-2"><input type="checkbox" checked={form.randomizeOptions} onChange={(e) => setForm({ ...form, randomizeOptions: e.target.checked })} className="h-3.5 w-3.5 accent-[#873BFF]" /> Randomise options</label>
+                </div>
               </div>
+              <label className="flex items-center gap-2 text-[11px] text-[#C2CCDD]">
+                <input type="checkbox" checked={form.isRequired} onChange={(e) => setForm({ ...form, isRequired: e.target.checked })} className="h-4 w-4 accent-[#873BFF]" />
+                Required for progression (module must be passed to unlock the next module)
+              </label>
             </div>
             <div className="mt-5 flex justify-end gap-2">
               <button type="button" onClick={() => setOpen(false)} className="btn btn-ghost btn-sm h-9">Cancel</button>

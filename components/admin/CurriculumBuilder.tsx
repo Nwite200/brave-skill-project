@@ -17,7 +17,7 @@ import {
   X,
 } from "lucide-react";
 import { formatDuration } from "@/lib/format";
-import { uploadAsset } from "@/components/admin/upload";
+import { uploadAsset, uploadLessonVideo } from "@/components/admin/upload";
 
 type LessonRow = {
   id: string;
@@ -82,6 +82,7 @@ export function CurriculumBuilder({
   const [moduleModal, setModuleModal] = useState<{ open: boolean; id?: string; title: string; description: string }>({ open: false, title: "", description: "" });
   const [lessonModal, setLessonModal] = useState<{ open: boolean; moduleId: string; values: typeof emptyLesson }>({ open: false, moduleId: "", values: emptyLesson });
   const [uploading, setUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
   const [deleteTarget, setDeleteTarget] = useState<{ type: "module" | "lesson"; id: string; title: string } | null>(null);
   const fileRef = useRef<HTMLInputElement | null>(null);
   const [openModules, setOpenModules] = useState<Record<string, boolean>>(
@@ -144,9 +145,12 @@ export function CurriculumBuilder({
 
   const uploadFile = async (file: File, kind: "VIDEO" | "PDF") => {
     setUploading(true);
+    setUploadProgress(0);
     setError("");
     try {
-      const asset = await uploadAsset(file, kind);
+      const asset = kind === "VIDEO"
+        ? await uploadLessonVideo(file, { onProgress: setUploadProgress })
+        : await uploadAsset(file, kind);
       setLessonModal((prev) => ({
         ...prev,
         values: {
@@ -158,6 +162,7 @@ export function CurriculumBuilder({
       setError(e instanceof Error ? e.message : "Upload failed.");
     } finally {
       setUploading(false);
+      setUploadProgress(0);
     }
   };
 
@@ -358,7 +363,7 @@ export function CurriculumBuilder({
                   <div className="flex flex-wrap items-center gap-2">
                     <input ref={fileRef} type="file" accept="video/mp4,video/webm" className="hidden" onChange={(e) => { const f = e.target.files?.[0]; if (f) uploadFile(f, "VIDEO"); }} />
                     <button type="button" onClick={() => fileRef.current?.click()} disabled={uploading} className="btn btn-ghost btn-sm h-8">
-                      {uploading ? <Loader2 size={11} className="animate-spin" /> : <><Upload size={11} /> Upload MP4</>}
+                      {uploading ? <><Loader2 size={11} className="animate-spin" /> {uploadProgress}%</> : <><Upload size={11} /> Upload MP4</>}
                     </button>
                     <span className="text-[9px] text-[#5F6B7E]">or</span>
                     <input className="field h-8 flex-1 text-[10.5px]" placeholder="https://vimeo.com/… or direct MP4 URL" value={lessonModal.values.videoUrl} onChange={(e) => setLessonModal((p) => ({ ...p, values: { ...p.values, videoUrl: e.target.value } }))} />

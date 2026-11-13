@@ -12,8 +12,11 @@ export default async function AdminRevenuePage() {
   await requireAdminPage();
   const now = new Date();
   const start12 = new Date(now.getFullYear(), now.getMonth() - 11, 1);
+  const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const weekStart = new Date(todayStart.getTime() - 6 * 86400000);
+  const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
 
-  const [paidOrders, refunded, paidCount, monthlyRaw, byCourse, byCategory, topStudents] = await Promise.all([
+  const [paidOrders, refunded, paidCount, monthlyRaw, byCourse, byCategory, topStudents, todayRevenue, weekRevenue, monthRevenue, failedOrders] = await Promise.all([
     db.order.aggregate({ where: { status: "PAID" }, _sum: { amountKobo: true } }),
     db.order.aggregate({ where: { status: "REFUNDED" }, _sum: { amountKobo: true, refundAmountKobo: true }, _count: true }),
     db.order.count({ where: { status: "PAID" } }),
@@ -24,6 +27,15 @@ export default async function AdminRevenuePage() {
       where: { role: "STUDENT" },
       include: { orders: { where: { status: "PAID" }, select: { amountKobo: true } } },
       take: 200,
+    }),
+    db.order.aggregate({ where: { status: "PAID", paidAt: { gte: todayStart } }, _sum: { amountKobo: true }, _count: true }),
+    db.order.aggregate({ where: { status: "PAID", paidAt: { gte: weekStart } }, _sum: { amountKobo: true }, _count: true }),
+    db.order.aggregate({ where: { status: "PAID", paidAt: { gte: monthStart } }, _sum: { amountKobo: true }, _count: true }),
+    db.order.findMany({
+      where: { status: { in: ["FAILED", "PENDING"] } },
+      orderBy: { createdAt: "desc" },
+      take: 6,
+      include: { user: { select: { name: true } }, course: { select: { title: true } } },
     }),
   ]);
 
@@ -78,10 +90,10 @@ export default async function AdminRevenuePage() {
 
       <div className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
         {[
-          { label: "Gross revenue", value: formatNaira(gross), sub: `${formatNumber(paidCount)} paid orders`, tint: "#10C99A" },
-          { label: "Refunded", value: formatNaira(refundedAmount), sub: `${refunded._count} refunds`, tint: "#FB7185" },
-          { label: "Net revenue", value: formatNaira(net), sub: "gross minus refunds", tint: "#20D9E8" },
-          { label: "Average order", value: formatNaira(aov), sub: "per paid enrolment", tint: "#873BFF" },
+          { label: "Today", value: formatNaira(todayRevenue._sum.amountKobo || 0), sub: `${todayRevenue._count} paid orders`, tint: "#20D9E8" },
+          { label: "This week", value: formatNaira(weekRevenue._sum.amountKobo || 0), sub: `${weekRevenue._count} paid orders`, tint: "#873BFF" },
+          { label: "This month", value: formatNaira(monthRevenue._sum.amountKobo || 0), sub: `${monthRevenue._count} paid orders`, tint: "#10C99A" },
+          { label: "All-time gross", value: formatNaira(gross), sub: `${formatNumber(paidCount)} paid orders`, tint: "#FBBF24" },
         ].map((stat) => (
           <div key={stat.label} className="rounded-xl border border-white/[0.07] bg-[#0A0C15] p-4">
             <div className="flex items-center justify-between">
@@ -90,6 +102,20 @@ export default async function AdminRevenuePage() {
             </div>
             <p className="num mt-2 text-[21px] font-semibold text-white">{stat.value}</p>
             <p className="mt-0.5 text-[9px] text-[#5F6B7E]">{stat.sub}</p>
+          </div>
+        ))}
+      </div>
+
+      <div className="mt-4 grid gap-3 sm:grid-cols-3">
+        {[
+          { label: "Refunds", value: formatNaira(refundedAmount), sub: `${refunded._count} refunded orders` },
+          { label: "Net revenue", value: formatNaira(net), sub: "gross minus refunds" },
+          { label: "Average order", value: formatNaira(aov), sub: "per paid enrolment" },
+        ].map((stat) => (
+          <div key={stat.label} className="rounded-xl border border-white/[0.07] bg-[#0A0C15] p-3.5">
+            <p className="text-[8.5px] uppercase tracking-[0.16em] text-[#6F7C90]">{stat.label}</p>
+            <p className="num mt-1 text-[16px] font-semibold text-white">{stat.value}</p>
+            <p className="text-[9px] text-[#5F6B7E]">{stat.sub}</p>
           </div>
         ))}
       </div>
@@ -176,6 +202,30 @@ export default async function AdminRevenuePage() {
             ))}
             {!studentSpend.length && <p className="text-[10px] text-[#5F6B7E]">No paid students yet.</p>}
           </div>
+        </div>
+      </div>
+
+      <div className="mt-4 rounded-xl border border-white/[0.07] bg-[#0A0C15] p-5">
+        <div className="flex items-center justify-between">
+          <p className="text-[9px] uppercase tracking-[0.18em] text-[#6F7C90]">Failed & pending transactions</p>
+          <Link href="/admin/transactions" className="text-[9px] text-[#C9B8FF] hover:text-white">All transactions →</Link>
+        </div>
+        <div className="mt-3 table-wrap border-0">
+          <table className="data min-w-[520px]">
+            <thead><tr><th>Student</th><th>Course</th><th>Amount</th><th>Status</th><th>Reference</th></tr></thead>
+            <tbody>
+              {failedOrders.map((order) => (
+                <tr key={order.id}>
+                  <td className="text-[10.5px] text-white">{order.user.name}</td>
+                  <td className="max-w-[220px] truncate text-[10.5px]">{order.course.title}</td>
+                  <td className="num text-[10.5px]">{formatNaira(order.amountKobo)}</td>
+                  <td><span className={order.status === "FAILED" ? "text-[9px] text-rose-300" : "text-[9px] text-amber-300"}>{order.status}</span></td>
+                  <td className="num text-[9px] text-[#6F7C90]">{order.reference}</td>
+                </tr>
+              ))}
+              {!failedOrders.length && <tr><td colSpan={5} className="py-6 text-center text-[10px] text-[#6F7C90]">No failed or pending transactions.</td></tr>}
+            </tbody>
+          </table>
         </div>
       </div>
     </div>

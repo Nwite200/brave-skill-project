@@ -2,7 +2,7 @@
 
 ## Test environment
 
-- Web: Next.js 15.5.9 (production build), Node 22, PostgreSQL 16
+- Web: Next.js 15.5.x (production build), Node 22, PostgreSQL 16
 - Browser automation: headless Chrome via Puppeteer
 - Mobile: Flutter Android (see `docs/ANDROID.md`)
 
@@ -31,7 +31,13 @@ Demo accounts (password `BraveSkill#2026`):
 | Receipts | PDF generation and download | Pass |
 | Certificates | PDF download, public verification JSON, revocation | Pass |
 | Media | Video streaming, HTTP Range 206, anonymous access denied | Pass |
-| Assessments | Start attempt, server grading, review payload | Pass |
+| Assessments | Start attempt, randomised questions/options, server grading, review payload | Pass |
+| Module progression | Locked module media/progress return 403; pass quiz unlocks next module; fail does not | Pass |
+| Reviews | Enrolled student review, public average/list, admin hide/publish | Pass |
+| Discussion | Enrolled thread + reply; non-enrolled blocked | Pass |
+| Support | Student ticket creation and listing; admin queue | Pass |
+| Referrals | Code/link generation, signup attribution | Pass |
+| Video library | Admin list, Stream status correctly reports not configured | Pass |
 | Admin content | Create module/lesson, create announcement, instructor ownership | Pass |
 | Admin permissions | Instructor blocked from admin-only pages/endpoints | Pass |
 | Reports | CSV generation for each report type | Pass |
@@ -79,7 +85,14 @@ settings, and the main administrator screens. Output: `qa-shots/`.
 - [x] Video playback with seeking, PDF viewing and download.
 - [x] Mark complete, progress percentages and completion counts.
 - [x] Quiz start, navigation, submission, answer review.
-- [x] Final exam locked until all lessons complete.
+- [x] Compulsory module quiz unlocks only after all module lessons are complete.
+- [x] Next module stays locked until the required module quiz is passed.
+- [x] Final exam locked until every module is complete and every required quiz is passed.
+- [x] Locked lesson video/PDF URLs return 403; reused assets require lesson context.
+- [x] Student support ticket creation and history.
+- [x] Referral link and code in settings.
+- [x] Course review submission and public display.
+- [x] Course discussion thread and replies.
 - [x] Certificate list and PDF download.
 - [x] Payment history with receipt download.
 - [x] Notifications read state.
@@ -92,7 +105,9 @@ settings, and the main administrator screens. Output: `qa-shots/`.
 - [x] Course create/edit, publish/feature toggles.
 - [x] Curriculum builder: module create/edit, lesson create with video URL/text.
 - [x] File upload (image/PDF/video) and entitlement enforcement.
-- [x] Assessment creation and question editor.
+- [x] Assessment creation and question editor, module binding, required flag, randomisation, defaults.
+- [x] Video library: upload, provider/status, lesson usage and delete.
+- [x] Review moderation (publish/hide/delete).
 - [x] Student search, manual grant, password reset, suspend/activate.
 - [x] Instructor creation and restricted navigation.
 - [x] Transaction list, refund flow and revocation.
@@ -117,6 +132,7 @@ settings, and the main administrator screens. Output: `qa-shots/`.
 - [x] Disabling the agent hides the widget and the chat API refuses.
 - [x] Widget text chat, speaking state, mute and stop controls.
 - [x] Android build compiles with the assistant screen and microphone permission.
+- [x] Android release 1.2.0 (versionCode 3) built, signed, uploaded and served by the download API.
 
 ### Payments
 
@@ -144,9 +160,12 @@ settings, and the main administrator screens. Output: `qa-shots/`.
    with real course recordings before launch.
 2. Paystack keys are intentionally blank, so checkout uses the guarded test flow.
 3. Email is logged to the server console when SMTP is not configured.
-4. The demo seed should not be run in production; create the owner account manually
+4. Cloudflare Stream is integrated but disabled until credentials and cost approval; the
+   live Stream/DRM checklist in `docs/VIDEO.md` is still outstanding.
+5. Android in-app purchase is consumption-only pending the owner's Google Play decision.
+6. The demo seed should not be run in production; create the owner account manually
    (see the deployment guide).
-5. Email verification is not enforced at sign-in; the field exists and can be enabled
+7. Email verification is not enforced at sign-in; the field exists and can be enabled
    later. Password reset is fully implemented.
 
 ---
@@ -165,3 +184,35 @@ npm run qa:screens
 
 For production-like results, run against the production build — cold compilation in
 development can exceed the test timeouts.
+
+
+---
+
+## Final regression — 13 November 2026
+
+Production build (`npm run build && npm start`) against a clean seed:
+
+| Check | Result |
+| --- | --- |
+| Home, catalogue, course page, health endpoint | 200 |
+| Student/admin login and role routing | Pass |
+| Clean seed (users, courses, media, progress, certificates, reviews, discussion) | Pass |
+| Module 5 locked while module 4 incomplete | Pass |
+| Locked media without lesson context | 400 |
+| Locked media with lesson context | 403 |
+| Locked lesson progress update | 403 with module message |
+| Unpaid course, non-preview video | 403 |
+| Unpaid course, preview video | 200 (intended) |
+| Demo checkout → fulfilment → one-course enrolment | Pass |
+| Duplicate purchase returns already-enrolled | Pass |
+| Purchased module 1 video | 200 |
+| Other unpaid course video | 403 |
+| Module quiz start with shuffled options; retake limit | Pass |
+| Certificate public JSON, verification page and PDF | Pass |
+| Review, discussion, reply and support ticket APIs | Pass |
+| Admin videos, reviews, examinations, revenue, website | 200 |
+| CSP present; no console errors on home/login/course/support | Pass |
+| APK download hash matches signed release artifact | Pass |
+
+Final artifacts: `BraveSkill-1.2.0.apk` and `.aab` in
+`/Users/a/brave-skill-deliverables`, with `SHA256SUMS-1.2.0.txt`.

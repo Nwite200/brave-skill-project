@@ -5,6 +5,7 @@ import { requireUser } from "@/lib/auth";
 import { submitAttemptSchema } from "@/lib/validation";
 import { issueCertificate } from "@/lib/certificates";
 import { audit } from "@/lib/audit";
+import { getCourseProgression } from "@/lib/progression";
 
 export const runtime = "nodejs";
 
@@ -28,7 +29,23 @@ export const POST = route(async (req: NextRequest, ctx) => {
   if (attempt.submittedAt) return fail("This attempt has already been submitted.", 409);
 
   const data = await parseJson(req, submitAttemptSchema);
-  const questions = attempt.quiz.questions;
+  const allQuestions = attempt.quiz.questions;
+  const byId = new Map(allQuestions.map((question) => [question.id, question]));
+
+  let questionOrder: string[];
+  let optionOrder: number[][];
+  try {
+    questionOrder = attempt.questionOrder ? (JSON.parse(attempt.questionOrder) as string[]) : allQuestions.map((q) => q.id);
+    optionOrder = attempt.optionOrder ? (JSON.parse(attempt.optionOrder) as number[][]) : allQuestions.map((q) => {
+      const options = JSON.parse(q.options) as string[];
+      return options.map((_, index) => index);
+    });
+  } catch {
+    questionOrder = allQuestions.map((q) => q.id);
+    optionOrder = allQuestions.map((q) => (JSON.parse(q.options) as string[]).map((_, index) => index));
+  }
+
+  const questions = questionOrder.map((questionId) => byId.get(questionId)).filter(Boolean) as typeof allQuestions;
 
   let expired = false;
   if (attempt.quiz.timeLimitMinutes > 0) {
@@ -39,14 +56,20 @@ export const POST = route(async (req: NextRequest, ctx) => {
   let score = 0;
   let maxScore = 0;
   const graded = questions.map((question, index) => {
-    const selected = typeof data.answers[index] === "number" ? data.answers[index] : -1;
-    const correct = !expired && selected === question.correctIndex;
+    const options = JSON.parse(question.options) as string[];
+    const order = optionOrder[index] || options.map((_, i) => i);
+    const selectedDisplay = typeof data.answers[index] === "number" ? data.answers[index] : -1;
+    const selectedOriginal = selectedDisplay >= 0 ? order[selectedDisplay] : -1;
+    const correct = !expired && selectedOriginal === question.correctIndex;
     maxScore += question.points;
     if (correct) score += question.points;
     return {
       questionId: question.id,
-      selected,
-      correctIndex: question.correctIndex,
+      prompt: question.prompt,
+      selected: selectedDisplay,
+      correctIndex: order.indexOf(question.correctIndex),
+      selectedAnswer: selectedOriginal >= 0 ? options[selectedOriginal] : null,
+      correctAnswer: options[question.correctIndex],
       correct,
       points: question.points,
       explanation: question.explanation,
@@ -76,11 +99,8 @@ export const POST = route(async (req: NextRequest, ctx) => {
       where: { userId_courseId: { userId: user.id, courseId: attempt.quiz.courseId } },
     });
     if (enrollment) {
-      const [completedLessons, totalLessons] = await Promise.all([
-        db.lessonProgress.count({ where: { enrollmentId: enrollment.id, completed: true } }),
-        db.lesson.count({ where: { module: { courseId: attempt.quiz.courseId }, isPublished: true } }),
-      ]);
-      if (completedLessons >= totalLessons) {
+      const progression = await getCourseProgression({ courseId: attempt.quiz.courseId, userId: user.id });
+      if (progression.examAvailable) {
         const certificate = await issueCertificate({
           userId: user.id,
           courseId: attempt.quiz.courseId,
@@ -89,7 +109,7 @@ export const POST = route(async (req: NextRequest, ctx) => {
         });
         certificateSerial = certificate.serial;
       } else {
-        certificateNote = "Exam passed. Complete all remaining lessons to unlock your certificate.";
+        certificateNote = "Exam passed. Complete all lessons and required module quizzes to unlock your certificate.";
       }
     }
   }
@@ -98,9 +118,9 @@ export const POST = route(async (req: NextRequest, ctx) => {
     data: {
       userId: user.id,
       type: "COURSE",
-      title: passed ? `${attempt.quiz.type === "EXAM" ? "Final assessment" : "Quiz"} passed` : "Assessment result recorded",
+      title: passed ? `${attempt.quiz.type === "EXAM" ? "Final assessment" : "Assessment"} passed` : "Assessment result recorded",
       body: `${attempt.quiz.title}: ${percent}% (pass mark ${attempt.quiz.passMark}%).`,
-      link: certificateSerial ? "/dashboard/certificates" : `/dashboard/assessments`,
+      link: certificateSerial ? "/dashboard/certificates" : "/dashboard/assessments",
     },
   });
 

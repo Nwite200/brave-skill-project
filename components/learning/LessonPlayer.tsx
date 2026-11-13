@@ -32,7 +32,10 @@ type Lesson = {
   videoUrl: string | null;
   content: string | null;
   isPreview: boolean;
+  videoProvider?: string | null;
 };
+
+type StreamPlayback = { iframeUrl: string; watermark: string } | null;
 
 export function LessonPlayer({
   lesson,
@@ -47,6 +50,7 @@ export function LessonPlayer({
   progressPercent,
   quizzes,
   nextCourseLessonHref,
+  studentEmail,
 }: {
   lesson: Lesson;
   completed: boolean;
@@ -55,11 +59,21 @@ export function LessonPlayer({
   prevLessonId: string | null;
   courseId: string;
   courseTitle: string;
-  modules: { id: string; title: string; position: number; lessons: { id: string; title: string; type: string; durationSeconds: number; isPreview: boolean }[] }[];
+  modules: {
+    id: string;
+    title: string;
+    position: number;
+    locked?: boolean;
+    quizId?: string | null;
+    quizPassed?: boolean;
+    quizRequired?: boolean;
+    lessons: { id: string; title: string; type: string; durationSeconds: number; isPreview: boolean; locked?: boolean; completed?: boolean }[];
+  }[];
   activeLessonId: string;
   progressPercent: number;
-  quizzes: { id: string; title: string; type: string; questionCount: number; passed: boolean }[];
+  quizzes: { id: string; title: string; type: string; questionCount: number; passed: boolean; locked?: boolean; required?: boolean; moduleId?: string | null }[];
   nextCourseLessonHref: string | null;
+  studentEmail?: string;
 }) {
   const router = useRouter();
   const videoRef = useRef<HTMLVideoElement | null>(null);
@@ -69,6 +83,32 @@ export function LessonPlayer({
   const [tab, setTab] = useState<"overview" | "resources">("overview");
   const [toast, setToast] = useState("");
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [stream, setStream] = useState<StreamPlayback>(null);
+  const [streamLoading, setStreamLoading] = useState(false);
+  const [streamError, setStreamError] = useState("");
+
+  useEffect(() => {
+    let active = true;
+    setStream(null);
+    setStreamError("");
+    if (lesson.type !== "VIDEO" || lesson.videoProvider !== "cloudflare-stream") return;
+    setStreamLoading(true);
+    fetch(`/api/stream/${lesson.id}`, { cache: "no-store" })
+      .then(async (response) => {
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error || "Playback could not be authorised.");
+        if (active && data.provider === "cloudflare-stream" && data.iframeUrl) {
+          setStream({ iframeUrl: data.iframeUrl, watermark: data.watermark || studentEmail || "" });
+        } else if (active) {
+          setStreamError("This video is not configured for signed playback.");
+        }
+      })
+      .catch((error) => active && setStreamError(error instanceof Error ? error.message : "Playback failed."))
+      .finally(() => active && setStreamLoading(false));
+    return () => {
+      active = false;
+    };
+  }, [lesson.id, lesson.type, lesson.videoProvider, studentEmail]);
 
   useEffect(() => {
     setIsCompleted(completed);
@@ -120,7 +160,7 @@ export function LessonPlayer({
     }
   };
 
-  const videoSrc = lesson.videoAssetId ? `/api/media/${lesson.videoAssetId}` : lesson.videoUrl || "";
+  const videoSrc = lesson.videoAssetId ? `/api/media/${lesson.videoAssetId}?lessonId=${lesson.id}` : lesson.videoUrl || "";
 
   return (
     <div className="min-h-[calc(100vh-62px)] bg-[#050509]">
@@ -160,6 +200,7 @@ export function LessonPlayer({
                   <iframe src={videoSrc} title={lesson.title} allow="autoplay; fullscreen; picture-in-picture" allowFullScreen className="h-full w-full" />
                 </div>
               ) : (
+                <div className="relative">
                 <video
                   ref={videoRef}
                   key={lesson.id}
@@ -175,12 +216,16 @@ export function LessonPlayer({
                   <source src={videoSrc} />
                   Your browser does not support video playback.
                 </video>
+                <span className="pointer-events-none absolute right-3 top-3 rounded bg-black/45 px-2 py-1 text-[8px] text-white/50 backdrop-blur">
+                  {studentEmail || ""}
+                </span>
+                </div>
               )
             ) : lesson.type === "PDF" && lesson.pdfAssetId ? (
               <div className="bg-[#0B0E18]">
                 <div className="flex items-center justify-between gap-3 border-b border-white/[0.07] px-4 py-2.5">
                   <span className="flex items-center gap-2 text-[10.5px] text-[#C2CCDD]"><FileText size={13} className="text-[#20D9E8]" /> PDF learning material</span>
-                  <a href={`/api/media/${lesson.pdfAssetId}`} download className="flex items-center gap-1.5 rounded-full border border-white/10 px-3 py-1 text-[10px] text-[#C2CCDD] hover:border-white/25">
+                  <a href={`/api/media/${lesson.pdfAssetId}?lessonId=${lesson.id}`} download className="flex items-center gap-1.5 rounded-full border border-white/10 px-3 py-1 text-[10px] text-[#C2CCDD] hover:border-white/25">
                     <Download size={11} /> Download
                   </a>
                 </div>
@@ -257,14 +302,14 @@ export function LessonPlayer({
             ) : (
               <div className="mt-4 space-y-2">
                 {lesson.pdfAssetId && (
-                  <a href={`/api/media/${lesson.pdfAssetId}`} target="_blank" rel="noreferrer" className="flex items-center gap-3 rounded-xl border border-white/[0.07] bg-white/[0.02] p-3 hover:border-white/15">
+                  <a href={`/api/media/${lesson.pdfAssetId}?lessonId=${lesson.id}`} target="_blank" rel="noreferrer" className="flex items-center gap-3 rounded-xl border border-white/[0.07] bg-white/[0.02] p-3 hover:border-white/15">
                     <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#20D9E8]/10 text-[#20D9E8]"><FileText size={14} /></span>
                     <div className="flex-1"><p className="text-[11.5px] text-white">Lesson PDF</p><p className="text-[9.5px] text-[#6F7C90]">Open or download the field guide</p></div>
                     <Download size={13} className="text-[#5F6B7E]" />
                   </a>
                 )}
                 {lesson.type === "VIDEO" && lesson.videoAssetId && (
-                  <a href={`/api/media/${lesson.videoAssetId}`} download className="flex items-center gap-3 rounded-xl border border-white/[0.07] bg-white/[0.02] p-3 hover:border-white/15">
+                  <a href={`/api/media/${lesson.videoAssetId}?lessonId=${lesson.id}`} download className="flex items-center gap-3 rounded-xl border border-white/[0.07] bg-white/[0.02] p-3 hover:border-white/15">
                     <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#873BFF]/10 text-[#C9B8FF]"><Play size={14} /></span>
                     <div className="flex-1"><p className="text-[11.5px] text-white">Download lesson media</p><p className="text-[9.5px] text-[#6F7C90]">Save for offline viewing (where supported)</p></div>
                     <Download size={13} className="text-[#5F6B7E]" />
@@ -291,20 +336,32 @@ export function LessonPlayer({
                   <summary className="flex cursor-pointer list-none items-center justify-between gap-2 rounded-lg px-2.5 py-2 hover:bg-white/[0.03] [&::-webkit-details-marker]:hidden">
                     <div className="flex min-w-0 items-center gap-2">
                       <span className="num text-[9px] text-[#5F6B7E]">{String(mi + 1).padStart(2, "0")}</span>
-                      <span className="truncate text-[11px] font-medium text-[#C2CCDD]">{module.title}</span>
+                      <span className={`truncate text-[11px] font-medium ${module.locked ? "text-[#5F6B7E]" : "text-[#C2CCDD]"}`}>{module.title}</span>
+                      {module.locked && <Lock size={10} className="shrink-0 text-[#4F5B6E]" />}
+                      {module.quizPassed && !module.locked && <CheckCircle2 size={10} className="shrink-0 text-emerald-400" />}
                     </div>
                     <ChevronRight size={12} className="shrink-0 text-[#4F5B6E] transition group-open:rotate-90" />
                   </summary>
                   <div className="mt-0.5 space-y-0.5 pb-1">
                     {module.lessons.map((item) => {
                       const active = item.id === activeLessonId;
+                      const locked = module.locked || item.locked;
+                      if (locked) {
+                        return (
+                          <div key={item.id} className="flex items-center gap-2 rounded-lg py-2 pl-7 pr-2 text-[#4F5B6E]">
+                            <Lock size={11} className="shrink-0" />
+                            <span className="min-w-0 flex-1 truncate text-[10.5px]">{item.title}</span>
+                            <span className="shrink-0 text-[8.5px]">Locked</span>
+                          </div>
+                        );
+                      }
                       return (
                         <Link
                           key={item.id}
                           href={`/dashboard/courses/${courseId}?lesson=${item.id}`}
                           className={`flex items-center gap-2 rounded-lg py-2 pl-7 pr-2 transition ${active ? "bg-[#873BFF]/12 text-white" : "text-[#8492A6] hover:bg-white/[0.03] hover:text-[#C2CCDD]"}`}
                         >
-                          {item.type === "PDF" ? <FileText size={11} className="shrink-0 text-[#20D9E8]" /> : <PlayCircle size={11} className={`shrink-0 ${active ? "text-[#C9B8FF]" : "text-[#5F6B7E]"}`} />}
+                          {item.completed ? <CheckCircle2 size={11} className="shrink-0 text-emerald-400" /> : item.type === "PDF" ? <FileText size={11} className="shrink-0 text-[#20D9E8]" /> : <PlayCircle size={11} className={`shrink-0 ${active ? "text-[#C9B8FF]" : "text-[#5F6B7E]"}`} />}
                           <span className="min-w-0 flex-1 truncate text-[10.5px]">{item.title}</span>
                           <span className="shrink-0 text-[8.5px] text-[#4F5B6E]">{item.durationSeconds ? `${Math.round(item.durationSeconds / 60)}m` : ""}</span>
                         </Link>
@@ -320,18 +377,29 @@ export function LessonPlayer({
             <div className="border-t border-white/[0.06] p-3">
               <p className="px-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-[#6F7C90]">Assessments</p>
               <div className="mt-2 space-y-1">
-                {quizzes.map((quiz) => (
-                  <Link key={quiz.id} href={`/dashboard/assessments/${quiz.id}`} className="flex items-center gap-2 rounded-lg border border-white/[0.06] bg-white/[0.02] p-2.5 hover:border-white/15">
-                    <span className={`flex h-6 w-6 items-center justify-center rounded-md ${quiz.passed ? "bg-emerald-500/10 text-emerald-300" : "bg-[#873BFF]/12 text-[#C9B8FF]"}`}>
-                      {quiz.passed ? <CheckCircle2 size={12} /> : <SparklesIcon />}
-                    </span>
-                    <div className="min-w-0 flex-1">
-                      <p className="truncate text-[10.5px] text-white">{quiz.title}</p>
-                      <p className="text-[8.5px] text-[#6F7C90]">{quiz.type === "EXAM" ? "Final exam" : "Quiz"} · {quiz.questionCount} questions</p>
-                    </div>
-                    <ArrowRight size={11} className="text-[#4F5B6E]" />
-                  </Link>
-                ))}
+                {quizzes.map((quiz) => {
+                  const locked = quiz.locked;
+                  return (
+                    <Link
+                      key={quiz.id}
+                      href={locked ? "#" : `/dashboard/assessments/${quiz.id}`}
+                      aria-disabled={locked}
+                      onClick={(event) => locked && event.preventDefault()}
+                      className={`flex items-center gap-2 rounded-lg border border-white/[0.06] bg-white/[0.02] p-2.5 transition ${locked ? "opacity-60" : "hover:border-white/15"}`}
+                    >
+                      <span className={`flex h-6 w-6 items-center justify-center rounded-md ${quiz.passed ? "bg-emerald-500/10 text-emerald-300" : quiz.locked ? "bg-white/[0.04] text-[#5F6B7E]" : "bg-[#873BFF]/12 text-[#C9B8FF]"}`}>
+                        {quiz.passed ? <CheckCircle2 size={12} /> : quiz.locked ? <Lock size={11} /> : <SparklesIcon />}
+                      </span>
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate text-[10.5px] text-white">{quiz.title}</p>
+                        <p className="text-[8.5px] text-[#6F7C90]">
+                          {quiz.type === "EXAM" ? "Final exam" : quiz.required ? "Required module quiz" : "Module quiz"} · {quiz.questionCount} questions
+                        </p>
+                      </div>
+                      <ArrowRight size={11} className="text-[#4F5B6E]" />
+                    </Link>
+                  );
+                })}
               </div>
             </div>
           )}

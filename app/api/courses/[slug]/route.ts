@@ -4,6 +4,7 @@ import { json, route, fail } from "@/lib/api";
 import { getSessionUser, isStaff } from "@/lib/auth";
 import { getCourseBySlug } from "@/lib/courses";
 import { percent } from "@/lib/format";
+import { getCourseProgression } from "@/lib/progression";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -26,27 +27,43 @@ export const GET = route(async (_req: NextRequest, ctx) => {
   const lessons = course.modules.flatMap((m) => m.lessons);
   const completed = enrollment?.progress.filter((p) => p.completed).length || 0;
 
-  const modules = course.modules.map((module) => ({
-    id: module.id,
-    title: module.title,
-    position: module.position,
-    lessons: module.lessons.map((lesson) => {
-      const locked = !enrolled && !staff && !lesson.isPreview;
-      return {
-        id: lesson.id,
-        title: lesson.title,
-        type: lesson.type,
-        durationSeconds: lesson.durationSeconds,
-        isPreview: lesson.isPreview,
-        locked,
-        completed: progressMap.get(lesson.id) ?? false,
-        content: locked ? null : lesson.content,
-        videoAssetId: locked ? null : lesson.videoAssetId,
-        pdfAssetId: locked ? null : lesson.pdfAssetId,
-        videoUrl: locked ? null : lesson.videoUrl,
-      };
-    }),
-  }));
+  const progression = user && enrolled ? await getCourseProgression({ courseId: course.id, userId: user.id, staff }) : null;
+  const moduleState = new Map((progression?.modules || []).map((module) => [module.id, module]));
+
+  const modules = course.modules.map((module) => {
+    const state = moduleState.get(module.id);
+    const moduleLocked = Boolean(state?.locked);
+    return {
+      id: module.id,
+      title: module.title,
+      position: module.position,
+      locked: moduleLocked,
+      lessonsComplete: state?.lessonsComplete ?? false,
+      completedLessons: state?.completedLessons ?? 0,
+      totalLessons: state?.totalLessons ?? module.lessons.length,
+      quizRequired: state?.quizRequired ?? false,
+      quizPassed: state?.quizPassed ?? false,
+      quizAvailable: state?.quizAvailable ?? false,
+      quizId: state?.quizId ?? null,
+      quizTitle: state?.quizTitle ?? null,
+      lessons: module.lessons.map((lesson) => {
+        const locked = !staff && (!enrolled || moduleLocked) && !lesson.isPreview;
+        return {
+          id: lesson.id,
+          title: lesson.title,
+          type: lesson.type,
+          durationSeconds: lesson.durationSeconds,
+          isPreview: lesson.isPreview,
+          locked,
+          completed: progressMap.get(lesson.id) ?? false,
+          content: locked ? null : lesson.content,
+          videoAssetId: locked ? null : lesson.videoAssetId,
+          pdfAssetId: locked ? null : lesson.pdfAssetId,
+          videoUrl: locked ? null : lesson.videoUrl,
+        };
+      }),
+    };
+  });
 
   return json({
     ok: true,
@@ -74,14 +91,25 @@ export const GET = route(async (_req: NextRequest, ctx) => {
       lessons: lessons.length,
       students: course._count.enrollments,
       modules,
-      quizzes: course.quizzes.map((quiz) => ({
-        id: quiz.id,
-        title: quiz.title,
-        type: quiz.type,
-        passMark: quiz.passMark,
-        timeLimitMinutes: quiz.timeLimitMinutes,
-        questions: quiz._count.questions,
-      })),
+      quizzes: course.quizzes.map((quiz) => {
+        const quizModule = modules.find((module) => module.quizId === quiz.id);
+        const locked =
+          quiz.type === "EXAM"
+            ? Boolean(progression && !progression.examAvailable)
+            : Boolean(quizModule?.locked || (quizModule && !quizModule.lessonsComplete));
+        return {
+          id: quiz.id,
+          title: quiz.title,
+          type: quiz.type,
+          passMark: quiz.passMark,
+          timeLimitMinutes: quiz.timeLimitMinutes,
+          questions: quiz._count.questions,
+          moduleId: quizModule?.id || null,
+          moduleTitle: quizModule?.title || null,
+          locked,
+          required: quiz.isRequired,
+        };
+      }),
     },
     access: {
       enrolled,
@@ -91,6 +119,8 @@ export const GET = route(async (_req: NextRequest, ctx) => {
       completedLessons: completed,
       totalLessons: lessons.length,
       certificateSerial: enrollment?.certificate?.serial || null,
+      examAvailable: progression?.examAvailable ?? false,
+      nextLessonId: progression?.nextLessonId ?? null,
     },
   });
 });

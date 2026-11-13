@@ -20,11 +20,14 @@ import {
 } from "lucide-react";
 import { db } from "@/lib/db";
 import { getCourseBySlug, listPublishedCourses, courseJsonLd, courseCardInclude } from "@/lib/courses";
+import { getCourseProgression } from "@/lib/progression";
 import { getSessionUser, isStaff } from "@/lib/auth";
 import { formatDuration, formatNaira, levelLabel } from "@/lib/format";
 import { CourseCover, CourseCard } from "@/components/ui/CourseCard";
 import { PurchasePanel } from "@/components/courses/PurchasePanel";
 import { PageHero } from "@/components/site/PageHero";
+import { CourseReviews } from "@/components/courses/CourseReviews";
+import { CourseDiscussion } from "@/components/courses/CourseDiscussion";
 
 export const dynamic = "force-dynamic";
 
@@ -50,6 +53,25 @@ export default async function CourseDetailPage({ params }: { params: Promise<{ s
     ? await db.enrollment.findUnique({ where: { userId_courseId: { userId: user.id, courseId: course.id } } })
     : null;
   const enrolled = Boolean(enrollment && enrollment.status !== "REVOKED");
+  const progression = user && enrolled
+    ? await getCourseProgression({ courseId: course.id, userId: user.id, staff: Boolean(user && isStaff(user.role)) })
+    : null;
+  const moduleState = new Map((progression?.modules || []).map((module) => [module.id, module]));
+  const [reviewAggregate, reviews, threads] = await Promise.all([
+    db.review.aggregate({ where: { courseId: course.id, isPublished: true }, _avg: { rating: true }, _count: true }),
+    db.review.findMany({
+      where: { courseId: course.id, isPublished: true },
+      orderBy: { createdAt: "desc" },
+      take: 6,
+      include: { user: { select: { name: true } } },
+    }),
+    db.discussionThread.findMany({
+      where: { courseId: course.id },
+      orderBy: [{ isPinned: "desc" }, { createdAt: "desc" }],
+      take: 12,
+      include: { user: { select: { name: true } }, _count: { select: { posts: true } } },
+    }),
+  ]);
 
   const related = await db.course.findMany({
     where: { isPublished: true, id: { not: course.id }, categoryId: course.categoryId },
@@ -74,7 +96,7 @@ export default async function CourseDetailPage({ params }: { params: Promise<{ s
         subtitle={course.summary}
       >
         <div className="mt-6 flex flex-wrap items-center gap-x-5 gap-y-2 text-[11.5px] text-[#8492A6]">
-          <span className="flex items-center gap-1.5"><Star size={13} className="fill-[#FBBF24] text-[#FBBF24]" /> 4.9 rating</span>
+          <span className="flex items-center gap-1.5"><Star size={13} className="fill-[#FBBF24] text-[#FBBF24]" /> {reviewAggregate._avg.rating ? Number(reviewAggregate._avg.rating).toFixed(1) : "New"} {reviewAggregate._count ? `(${reviewAggregate._count})` : "rating"}</span>
           <span className="flex items-center gap-1.5"><Users size={13} /> {course._count.enrollments} enrolled</span>
           <span className="flex items-center gap-1.5"><Video size={13} /> {lessons.length} lessons</span>
           <span className="flex items-center gap-1.5"><Clock3 size={13} /> {course.durationLabel || formatDuration(totalSeconds)}</span>
@@ -147,19 +169,28 @@ export default async function CourseDetailPage({ params }: { params: Promise<{ s
                           {String(moduleIndex + 1).padStart(2, "0")}
                         </span>
                         <div className="min-w-0">
-                          <p className="truncate text-[12.5px] font-medium text-white">{module.title}</p>
-                          <p className="text-[10px] text-[#6F7C90]">{module.lessons.length} lessons · {formatDuration(module.lessons.reduce((s, l) => s + l.durationSeconds, 0))}</p>
+                          <p className="flex items-center gap-1.5 truncate text-[12.5px] font-medium text-white">
+                            {module.title}
+                            {moduleState.get(module.id)?.locked && <Lock size={11} className="shrink-0 text-[#5F6B7E]" />}
+                            {moduleState.get(module.id)?.quizPassed && <BadgeCheck size={11} className="shrink-0 text-emerald-400" />}
+                          </p>
+                          <p className="text-[10px] text-[#6F7C90]">
+                            {module.lessons.length} lessons · {formatDuration(module.lessons.reduce((s, l) => s + l.durationSeconds, 0))}
+                            {moduleState.get(module.id)?.quizRequired ? " · required quiz" : ""}
+                          </p>
                         </div>
                       </div>
                       <span className="shrink-0 text-[10px] text-[#6F7C90] transition group-open:rotate-180">▾</span>
                     </summary>
                     <div className="border-t border-white/[0.06] p-2">
                       {module.lessons.map((lesson, lessonIndex) => {
-                        const canPreview = lesson.isPreview;
+                        const moduleLocked = Boolean(moduleState.get(module.id)?.locked);
+                        const canPreview = lesson.isPreview && !moduleLocked;
+                        const lessonLocked = moduleLocked && !lesson.isPreview;
                         return (
-                          <div key={lesson.id} className="flex items-center justify-between gap-3 rounded-lg px-2.5 py-2.5 transition hover:bg-white/[0.02]">
+                          <div key={lesson.id} className={`flex items-center justify-between gap-3 rounded-lg px-2.5 py-2.5 transition ${lessonLocked ? "opacity-55" : "hover:bg-white/[0.02]"}`}>
                             <div className="flex min-w-0 items-center gap-2.5">
-                              {lesson.type === "PDF" ? <FileText size={13} className="shrink-0 text-[#20D9E8]" /> : lesson.type === "TEXT" ? <BookOpen size={13} className="shrink-0 text-[#10C99A]" /> : canPreview ? <PlayCircle size={13} className="shrink-0 text-[#C9B8FF]" /> : <Lock size={13} className="shrink-0 text-[#4B5668]" />}
+                              {lessonLocked ? <Lock size={13} className="shrink-0 text-[#4B5668]" /> : lesson.type === "PDF" ? <FileText size={13} className="shrink-0 text-[#20D9E8]" /> : lesson.type === "TEXT" ? <BookOpen size={13} className="shrink-0 text-[#10C99A]" /> : canPreview ? <PlayCircle size={13} className="shrink-0 text-[#C9B8FF]" /> : <Lock size={13} className="shrink-0 text-[#4B5668]" />}
                               <span className={`truncate text-[11.5px] ${canPreview ? "text-[#D6DFEC]" : "text-[#8492A6]"}`}>
                                 {String(moduleIndex + 1)}.{String(lessonIndex + 1)} {lesson.title}
                               </span>
@@ -222,7 +253,9 @@ export default async function CourseDetailPage({ params }: { params: Promise<{ s
                     <p className="text-[10.5px] text-[#9AA6BA]">{exam._count.questions} questions · pass mark {exam.passMark}% · {exam.timeLimitMinutes ? `${exam.timeLimitMinutes} min limit` : "no time limit"}</p>
                   </div>
                 </div>
-                <span className="chip border-[#873BFF]/25 bg-[#873BFF]/10 text-[#C9B8FF]">Certificate on pass</span>
+                <span className={`chip ${progression && !progression.examAvailable ? "border-white/10 text-[#6F7C90]" : "border-[#873BFF]/25 bg-[#873BFF]/10 text-[#C9B8FF]"}`}>
+                  {progression && !progression.examAvailable ? "Complete modules to unlock" : "Certificate on pass"}
+                </span>
               </div>
             )}
           </div>
@@ -268,6 +301,35 @@ export default async function CourseDetailPage({ params }: { params: Promise<{ s
               <Link href="/contact" className="btn btn-ghost btn-sm mt-3 w-full">Contact admissions</Link>
             </div>
           </aside>
+        </div>
+
+        <div className="container-bs">
+          <CourseDiscussion
+            courseId={course.id}
+            enrolled={enrolled}
+            threads={threads.map((thread) => ({
+              id: thread.id,
+              title: thread.title,
+              body: thread.body,
+              userName: thread.user.name,
+              count: thread._count.posts,
+              createdAt: thread.createdAt.toISOString(),
+            }))}
+          />
+          <CourseReviews
+            slug={course.slug}
+            average={Number((reviewAggregate._avg.rating || 0).toFixed(1))}
+            count={reviewAggregate._count}
+            enrolled={enrolled}
+            reviews={reviews.map((review) => ({
+              id: review.id,
+              rating: review.rating,
+              title: review.title,
+              body: review.body,
+              name: review.user.name,
+              createdAt: review.createdAt.toISOString(),
+            }))}
+          />
         </div>
 
         {related.length > 0 && (

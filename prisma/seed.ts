@@ -740,11 +740,17 @@ async function main() {
     const quiz = await db.quiz.create({
       data: {
         courseId: course.id,
+        moduleId: modules[0].id,
         title: seed.quiz.title,
         type: "QUIZ",
-        passMark: 60,
-        maxAttempts: 0,
-        description: "Check your understanding before the final assessment.",
+        passMark: 70,
+        timeLimitMinutes: 20,
+        maxAttempts: 2,
+        questionCount: 10,
+        randomizeQuestions: true,
+        randomizeOptions: true,
+        isRequired: true,
+        description: "Compulsory module quiz. Pass it to unlock the next module.",
       },
     });
     await Promise.all(
@@ -768,9 +774,12 @@ async function main() {
         title: seed.exam.title,
         type: "EXAM",
         passMark: 70,
-        timeLimitMinutes: 45,
-        maxAttempts: 3,
-        description: "Final assessment. Complete every lesson before starting.",
+        timeLimitMinutes: 20,
+        maxAttempts: 2,
+        questionCount: 10,
+        randomizeQuestions: true,
+        randomizeOptions: true,
+        description: "Final assessment. Complete every module quiz before starting.",
       },
     });
     await Promise.all(
@@ -923,6 +932,35 @@ async function main() {
     return attempt;
   }
 
+  // Demo students have already passed the compulsory first-module quiz, so their
+  // seeded later-module progress stays consistent with the progression rules.
+  async function passModuleQuiz(userId: string, course: (typeof createdCourses)[number]) {
+    const quiz = await db.quiz.findUnique({ where: { id: course.quizId }, include: { questions: { orderBy: { position: "asc" } } } });
+    if (!quiz) return;
+    await db.quizAttempt.create({
+      data: {
+        quizId: quiz.id,
+        userId,
+        attemptNumber: 1,
+        score: quiz.questions.reduce((s, q) => s + q.points, 0),
+        maxScore: quiz.questions.reduce((s, q) => s + q.points, 0),
+        percent: 100,
+        passed: true,
+        startedAt: new Date(Date.now() - 5 * 86400000),
+        submittedAt: new Date(Date.now() - 5 * 86400000 + 600000),
+        answers: JSON.stringify(quiz.questions.map((q) => ({ questionId: q.id, selected: q.correctIndex, correctIndex: q.correctIndex, correct: true }))),
+      },
+    });
+  }
+
+  await Promise.all([
+    passModuleQuiz(student1.id, electrical),
+    passModuleQuiz(student2.id, networking),
+    passModuleQuiz(student3.id, cctv),
+    passModuleQuiz(student3.id, solar),
+    passModuleQuiz(student3.id, access),
+  ]);
+
   const adaAttempt = await passExam(student1.id, electrical, 88);
   const fatimaAttempt = await passExam(student3.id, cctv, 92);
 
@@ -974,6 +1012,34 @@ async function main() {
       answers: "[]",
     },
   }).catch(() => {});
+
+  console.log("→ Reviews and discussions");
+  await db.review.createMany({
+    data: [
+      { userId: student1.id, courseId: solar.id, rating: 5, title: "Practical from day one", body: "The load audit and battery sizing modules changed how I quote. I installed my first 3kVA system three weeks after starting." },
+      { userId: student1.id, courseId: electrical.id, rating: 5, title: "Safety taken seriously", body: "Testing and inspection was taught properly, not as a footnote. I now test every circuit before energising." },
+      { userId: student2.id, courseId: networking.id, rating: 4, title: "Strong cabling and fibre content", body: "The fibre termination walkthrough was excellent. I would like more troubleshooting scenarios, but the core is solid." },
+      { userId: student3.id, courseId: cctv.id, rating: 5, title: "Fewer callbacks", body: "Storage calculations and camera placement are explained clearly. My installations are neater and my callbacks have dropped." },
+    ],
+  }).catch(() => {});
+
+  const solarThread = await db.discussionThread.create({
+    data: {
+      courseId: solar.id,
+      userId: student1.id,
+      title: "Balancing two lithium batteries in parallel",
+      body: "When adding a second 24V lithium battery in parallel, do you equalise charge before connecting, and how do you verify the balance?",
+    },
+  }).catch(() => null);
+  if (solarThread) {
+    await db.discussionPost.create({
+      data: {
+        threadId: solarThread.id,
+        userId: student3.id,
+        body: "Yes — charge both to the same voltage first, then connect with equal cable lengths. Check the current share under load before closing the bank.",
+      },
+    }).catch(() => {});
+  }
 
   console.log("→ Marketing content");
   await db.testimonial.createMany({
@@ -1086,7 +1152,7 @@ async function main() {
       { key: "site.phone", value: "+234 800 000 0000" },
       { key: "site.whatsapp", value: "2348000000000" },
       { key: "site.address", value: "Enugu, Nigeria" },
-      { key: "app.version", value: "1.1.0" },
+      { key: "app.version", value: "1.2.0" },
       { key: "ai.enabled", value: "true" },
       { key: "ai.name", value: "Brave AI Assistant" },
       {

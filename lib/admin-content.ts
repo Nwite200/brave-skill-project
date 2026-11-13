@@ -115,6 +115,11 @@ export const CONTENT_RESOURCES: Record<string, ContentResource> = {
     model: "quiz",
     schema: quizSchema,
     instructorAllowed: true,
+    transform: (data) => ({
+      ...data,
+      moduleId: data.moduleId || null,
+      description: data.description || null,
+    }),
     ownership: async (data) => ({ courseId: String(data.courseId || "") || null }),
   },
   questions: {

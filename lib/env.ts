@@ -9,7 +9,9 @@ export const env = {
     return required("DATABASE_URL");
   },
   get authSecret() {
-    return required("AUTH_SECRET");
+    const value = required("AUTH_SECRET");
+    if (value.length < 32) throw new Error("AUTH_SECRET must be at least 32 characters.");
+    return value;
   },
   get siteUrl() {
     return (process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000").replace(/\/$/, "");
@@ -36,7 +38,12 @@ export const env = {
     return process.env.NODE_ENV === "production";
   },
   get demoPaymentsEnabled() {
-    return process.env.ALLOW_DEMO_PAYMENTS === "true" && !process.env.PAYSTACK_SECRET_KEY?.trim();
+    const explicitlyAllowed = process.env.ALLOW_DEMO_PAYMENTS === "true";
+    const noGatewayKeys = !process.env.PAYSTACK_SECRET_KEY?.trim();
+    const localHost = /localhost|127\.0\.0\.1/i.test(this.siteUrl);
+    // Never allow the test fulfilment path on a real production host, even if
+    // the flag was left enabled by mistake.
+    return explicitlyAllowed && noGatewayKeys && (!this.isProduction || localHost);
   },
   get storageDir() {
     return process.env.STORAGE_DIR || "./storage";

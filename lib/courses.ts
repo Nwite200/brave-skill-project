@@ -91,7 +91,7 @@ export async function getCourseBySlug(slug: string) {
       },
       quizzes: {
         where: { isPublished: true },
-        select: { id: true, title: true, type: true, passMark: true, timeLimitMinutes: true, _count: { select: { questions: true } } },
+        select: { id: true, title: true, type: true, passMark: true, timeLimitMinutes: true, moduleId: true, isRequired: true, _count: { select: { questions: true } } },
       },
       _count: { select: { enrollments: true } },
     },

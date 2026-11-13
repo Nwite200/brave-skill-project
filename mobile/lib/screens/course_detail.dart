@@ -426,7 +426,11 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
               ),
               const SizedBox(width: 10),
               Expanded(
-                child: Text(module.title, style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w500, color: Colors.white)),
+                child: Row(children: [
+                  Expanded(child: Text(module.title, style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w500, color: module.locked ? BsColors.dim : Colors.white))),
+                  if (module.locked) const Icon(Icons.lock_outline, size: 13, color: BsColors.dim),
+                  if (module.quizPassed && !module.locked) const Icon(Icons.check_circle, size: 13, color: BsColors.emerald),
+                ]),
               ),
             ],
           ),

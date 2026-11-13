@@ -100,14 +100,20 @@ class ModuleInfo {
   final String id;
   final String title;
   final int position;
+  final bool locked;
+  final bool quizPassed;
+  final bool quizRequired;
   final List<LessonInfo> lessons;
 
-  ModuleInfo({required this.id, required this.title, required this.position, required this.lessons});
+  ModuleInfo({required this.id, required this.title, required this.position, required this.locked, required this.quizPassed, required this.quizRequired, required this.lessons});
 
   factory ModuleInfo.fromJson(Map<String, dynamic> json) => ModuleInfo(
         id: json['id'] as String,
         title: json['title'] as String,
         position: (json['position'] ?? 0) as int,
+        locked: (json['locked'] ?? false) as bool,
+        quizPassed: (json['quizPassed'] ?? false) as bool,
+        quizRequired: (json['quizRequired'] ?? false) as bool,
         lessons: ((json['lessons'] ?? []) as List)
             .map((e) => LessonInfo.fromJson(e as Map<String, dynamic>))
             .toList(),

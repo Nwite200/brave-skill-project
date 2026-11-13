@@ -2,6 +2,7 @@ import "server-only";
 
 import crypto from "crypto";
 import { PDFDocument, StandardFonts, rgb } from "pdf-lib";
+import QRCode from "qrcode";
 import { db } from "@/lib/db";
 import { env } from "@/lib/env";
 import { formatDate, formatNaira } from "@/lib/format";
@@ -116,13 +117,6 @@ export async function renderCertificatePdf(data: {
   });
 
   // brand mark — geometric B with cap
-  const bx = 66;
-  const by = 476;
-  page.drawRectangle({ x: bx, y: by, width: 46, height: 46, color: PURPLE, opacity: 0.14, borderColor: PURPLE, borderWidth: 0.7, borderOpacity: 0.5 });
-  page.drawText("B", { x: bx + 13, y: by + 11, size: 24, font: bold, color: WHITE });
-  page.drawText("BRAVE SKILL", { x: bx + 60, y: by + 25, size: 13, font: bold, color: WHITE });
-  page.drawText("SKILL ACQUISITION ACADEMY", { x: bx + 60, y: by + 11, size: 6.5, font: helv, color: CYAN });
-
   page.drawRectangle({ x: 26, y: 26, width: width - 52, height: height - 52, borderColor: PURPLE, borderWidth: 0.8, borderOpacity: 0.55 });
   page.drawRectangle({ x: 34, y: 34, width: width - 68, height: height - 68, borderColor: WHITE, borderWidth: 0.4, borderOpacity: 0.09 });
 
@@ -166,21 +160,42 @@ export async function renderCertificatePdf(data: {
   });
 
   // footer details
-  page.drawText("ISSUED", { x: 66, y: 126, size: 6.5, font: helv, color: MUTED });
-  page.drawText(formatDate(data.issuedAt), { x: 66, y: 110, size: 10, font: bold, color: WHITE });
+  page.drawText("ISSUED", { x: 66, y: 150, size: 6.5, font: helv, color: MUTED });
+  page.drawText(formatDate(data.issuedAt), { x: 66, y: 136, size: 10, font: bold, color: WHITE });
 
-  page.drawText("CERTIFICATE SERIAL", { x: 300, y: 126, size: 6.5, font: helv, color: MUTED });
-  page.drawText(data.serial, { x: 300, y: 110, size: 10, font: bold, color: WHITE });
+  page.drawText("CERTIFICATE SERIAL", { x: 66, y: 112, size: 6.5, font: helv, color: MUTED });
+  page.drawText(data.serial, { x: 66, y: 98, size: 10, font: bold, color: WHITE });
 
-  page.drawText("VERIFY", { x: 540, y: 126, size: 6.5, font: helv, color: MUTED });
-  page.drawText("academy.emyphilltech.com.ng/verify", { x: 540, y: 110, size: 8, font: helv, color: CYAN });
+  // Authorised signature: italic signature line plus printed signatory details.
+  page.drawText("Nwabueze Jeremiah", {
+    x: width / 2 - 78, y: 112, size: 17, font: oblique, color: rgb(0.96, 0.95, 1), opacity: 0.92,
+  });
+  page.drawLine({ start: { x: width / 2 - 80, y: 106 }, end: { x: width / 2 + 80, y: 106 }, thickness: 0.6, color: PURPLE, opacity: 0.45 });
+  page.drawText("Founder & Academy Director", {
+    x: width / 2 - (helv.widthOfTextAtSize("Founder & Academy Director", 6.2)) / 2,
+    y: 94, size: 6.2, font: helv, color: MUTED,
+  });
+
+  // QR verification — embeds the public registry URL.
+  const verifyUrl = `${process.env.NEXT_PUBLIC_SITE_URL || "https://academy.emyphilltech.com.ng"}/verify?serial=${encodeURIComponent(data.serial)}`;
+  const qrPng = await QRCode.toBuffer(verifyUrl, {
+    width: 220,
+    margin: 1,
+    color: { dark: "#050509", light: "#FFFFFF" },
+  });
+  const qr = await doc.embedPng(qrPng);
+  page.drawRectangle({ x: width - 142, y: 58, width: 92, height: 92, color: rgb(1, 1, 1) });
+  page.drawImage(qr, { x: width - 138, y: 62, width: 84, height: 84 });
+  page.drawText("SCAN TO VERIFY", {
+    x: width - 138, y: 152, size: 5.5, font: bold, color: CYAN,
+  });
 
   page.drawText(`Verification hash: ${data.verificationHash.slice(0, 40)}`, {
-    x: 66, y: 64, size: 5.6, font: helv, color: MUTED, opacity: 0.8,
+    x: 66, y: 48, size: 5.4, font: helv, color: MUTED, opacity: 0.8,
   });
   page.drawText("Emyphill-Tech Global Solutions Limited", {
-    x: width - 66 - oblique.widthOfTextAtSize("Emyphill-Tech Global Solutions Limited", 7.5),
-    y: 64, size: 7.5, font: oblique, color: MUTED,
+    x: width - 66 - oblique.widthOfTextAtSize("Emyphill-Tech Global Solutions Limited", 7.2),
+    y: 48, size: 7.2, font: oblique, color: MUTED,
   });
 
   return doc.save();

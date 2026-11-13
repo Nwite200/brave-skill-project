@@ -33,7 +33,7 @@ export const MAX_SIZES: Record<AssetKind, number> = {
 export const ALLOWED_MIME: Record<AssetKind, string[]> = {
   VIDEO: ["video/mp4", "video/webm", "video/x-m4v", "application/octet-stream"],
   PDF: ["application/pdf", "application/octet-stream"],
-  IMAGE: ["image/png", "image/jpeg", "image/webp", "image/svg+xml"],
+  IMAGE: ["image/png", "image/jpeg", "image/webp"],
   APK: ["application/vnd.android.package-archive", "application/octet-stream"],
   OTHER: ["application/octet-stream", "application/zip"],
 };
@@ -81,7 +81,7 @@ export async function saveAsset(input: {
     throw new HttpError(`Unsupported file type for ${kind.toLowerCase()}: ${mime || ext}`, 415);
   }
   const allowedExt =
-    kind === "VIDEO" ? [".mp4", ".webm", ".m4v"] : kind === "PDF" ? [".pdf"] : kind === "IMAGE" ? [".png", ".jpg", ".jpeg", ".webp", ".svg"] : kind === "APK" ? [".apk"] : [".zip", ".pdf", ".bin"];
+    kind === "VIDEO" ? [".mp4", ".webm", ".m4v"] : kind === "PDF" ? [".pdf"] : kind === "IMAGE" ? [".png", ".jpg", ".jpeg", ".webp"] : kind === "APK" ? [".apk"] : [".zip", ".pdf", ".bin"];
   if (!allowedExt.includes(ext)) {
     throw new HttpError(`Unsupported file extension: ${ext || "(none)"}`, 415);
   }

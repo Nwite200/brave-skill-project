@@ -5,6 +5,7 @@ import { requireUser } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { formatDate, maskEmail } from "@/lib/format";
 import { ProfileForm, PasswordForm } from "@/components/student/SettingsForms";
+import { ReferralCard } from "@/components/student/ReferralCard";
 
 export const metadata: Metadata = { title: "Account settings" };
 export const dynamic = "force-dynamic";
@@ -51,6 +52,7 @@ export default async function SettingsPage() {
           }}
         />
         <PasswordForm />
+        <ReferralCard />
 
         <div className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-white/[0.07] bg-[#0B0E18] p-5">
           <div className="flex items-center gap-3">

@@ -12,6 +12,26 @@ export type UploadedAsset = {
  * presigned PUT for large media. The direct path avoids Cloudflare's request
  * body limit and keeps large course videos off the application server.
  */
+export async function uploadLessonVideo(
+  file: File,
+  options: { lessonId?: string; onProgress?: (percent: number) => void } = {},
+): Promise<UploadedAsset> {
+  const status = await fetch("/api/admin/stream/status", { cache: "no-store" }).then((r) => r.json()).catch(() => null);
+  if (status?.configured) {
+    try {
+      const { uploadStreamVideo } = await import("@/components/admin/stream");
+      const asset = await uploadStreamVideo(file, options);
+      return { id: asset.id, name: asset.name, kind: "VIDEO", size: file.size, mime: file.type || "video/mp4" };
+    } catch (error) {
+      throw new Error(error instanceof Error ? error.message : "Cloudflare Stream upload failed.");
+    }
+  }
+  options.onProgress?.(5);
+  const asset = await uploadAsset(file, "VIDEO");
+  options.onProgress?.(100);
+  return asset;
+}
+
 export async function uploadAsset(file: File, kind: "VIDEO" | "PDF" | "IMAGE" | "APK"): Promise<UploadedAsset> {
   const large = file.size > 70 * 1024 * 1024;
 

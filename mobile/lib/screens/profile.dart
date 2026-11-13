@@ -164,7 +164,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       SizedBox(width: 8),
                       Text('Brave Skill Academy', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Colors.white)),
                       Spacer(),
-                      Text('v1.1.0', style: TextStyle(fontSize: 10, color: BsColors.dim)),
+                      Text('v1.2.0', style: TextStyle(fontSize: 10, color: BsColors.dim)),
                     ],
                   ),
                   const SizedBox(height: 10),

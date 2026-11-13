@@ -17,6 +17,9 @@ export function fail(message: string, status = 400, extra?: Record<string, unkno
 }
 
 export function clientIp(req: NextRequest) {
+  // Cloudflare sets CF-Connecting-IP at the edge and strips client copies.
+  const cf = req.headers.get("cf-connecting-ip");
+  if (process.env.CF_WORKER === "1" && cf) return cf;
   const forwarded = req.headers.get("x-forwarded-for");
   if (forwarded) return forwarded.split(",")[0].trim();
   return req.headers.get("x-real-ip") || "127.0.0.1";

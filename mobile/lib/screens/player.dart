@@ -60,7 +60,7 @@ class _PlayerScreenState extends State<PlayerScreen> {
       }
       selected ??= lessons.where((l) => !l.completed && !l.locked).isNotEmpty
           ? lessons.firstWhere((l) => !l.completed && !l.locked)
-          : lessons.first;
+          : (lessons.where((l) => !l.locked).isNotEmpty ? lessons.firstWhere((l) => !l.locked) : lessons.first);
       if (!mounted) return;
       setState(() {
         _course = course;
@@ -84,7 +84,7 @@ class _PlayerScreenState extends State<PlayerScreen> {
     _video = null;
     if (lesson.type == 'VIDEO' && lesson.videoAssetId != null && !lesson.locked) {
       final controller = VideoPlayerController.networkUrl(
-        Uri.parse(Api.instance.mediaUrl(lesson.videoAssetId!)),
+        Uri.parse('${Api.instance.mediaUrl(lesson.videoAssetId!)}?lessonId=${lesson.id}'),
         httpHeaders: Api.instance.mediaHeaders,
       );
       try {
@@ -190,7 +190,7 @@ class _PlayerScreenState extends State<PlayerScreen> {
     setState(() => _downloading = true);
     try {
       final file = await Api.instance.download(
-        '/media/${lesson.pdfAssetId}',
+        '/media/${lesson.pdfAssetId}?lessonId=${lesson.id}',
         '${lesson.title}-brave-skill.pdf',
       );
       await OpenFilex.open(file.path);

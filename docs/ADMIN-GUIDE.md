@@ -135,6 +135,25 @@ lessons.
 
 ## 6. Assessments and certificates
 
+### Module progression
+
+Each module can have one or more quizzes. Mark a quiz **Required for progression** to
+unlock the next module only after it is passed. The quiz becomes available when every
+published lesson in that module is complete. A locked module hides its lessons and
+blocks video/PDF access at the server, even if a student guesses the URL.
+
+Suggested defaults: 10 questions, 70% pass mark, 20 minutes, 2 attempts, randomise
+questions and options. All are configurable per quiz.
+
+### Video library and Cloudflare Stream
+
+**Admin → Video library** lists every uploaded video, its provider, status, usage and
+delete action. Uploads use private local/R2 storage until Cloudflare Stream is
+approved and configured. Once connected, uploads become resumable with progress,
+playback uses signed tokens, and the player overlays the student email. See
+`docs/VIDEO.md`; do not add Stream credentials without owner approval.
+
+
 **Admin → Examinations → New assessment.**
 
 - **Type** — `Final exam` unlocks certificates (requires all lessons complete) or

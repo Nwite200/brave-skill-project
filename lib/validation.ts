@@ -13,6 +13,7 @@ export const registerSchema = z.object({
   email,
   phone: z.string().trim().max(30).optional().or(z.literal("")),
   password,
+  referralCode: z.string().trim().max(40).optional().or(z.literal("")),
   acceptTerms: z.literal(true, { message: "Please accept the terms and privacy policy" }),
 });
 
@@ -106,12 +107,17 @@ export const lessonSchema = z.object({
 
 export const quizSchema = z.object({
   courseId: z.string().min(1),
+  moduleId: z.string().optional().or(z.literal("")),
   title: z.string().trim().min(3).max(160),
   description: z.string().trim().max(1000).optional().or(z.literal("")),
   type: z.enum(["QUIZ", "EXAM"]),
   passMark: z.coerce.number().int().min(0).max(100),
   timeLimitMinutes: z.coerce.number().int().min(0).max(480).optional(),
   maxAttempts: z.coerce.number().int().min(0).max(50).optional(),
+  questionCount: z.coerce.number().int().min(0).max(200).optional(),
+  randomizeQuestions: z.boolean().optional(),
+  randomizeOptions: z.boolean().optional(),
+  isRequired: z.boolean().optional(),
   isPublished: z.boolean().optional(),
 });
 

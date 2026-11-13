@@ -1,30 +1,19 @@
 #!/usr/bin/env bash
-# Brave Skill — PostgreSQL backup
+# Export Brave Skill's Cloudflare D1 database.
 # Usage: ./scripts/backup-db.sh [output-directory]
 set -euo pipefail
-
 cd "$(dirname "$0")/.."
-[ -f .env ] && set -a && . ./.env && set +a
 
-BACKUP_DIR="${1:-${BACKUP_DIR:-./backups}}"
+BACKUP_DIR="${1:-./backups}"
 STAMP="$(date +%Y%m%d-%H%M%S)"
-FILE="${BACKUP_DIR}/braveskill-${STAMP}.sql.gz"
+FILE="${BACKUP_DIR}/braveskill-${STAMP}.sql"
 mkdir -p "$BACKUP_DIR"
 
-if ! command -v pg_dump >/dev/null 2>&1; then
-  echo "pg_dump not found. Add PostgreSQL bin to PATH." >&2
-  exit 1
-fi
+: "${CLOUDFLARE_API_TOKEN:?Set CLOUDFLARE_API_TOKEN}"
+: "${CLOUDFLARE_ACCOUNT_ID:?Set CLOUDFLARE_ACCOUNT_ID}"
 
-echo "→ Backing up to ${FILE}"
-pg_dump --no-owner --no-privileges --format=plain "${DATABASE_URL}" | gzip -9 > "$FILE"
-
-# Checksum for integrity verification
+echo "→ Exporting Cloudflare D1 database to ${FILE}"
+npx wrangler d1 export brave-skill-db --remote --output="$FILE"
 shasum -a 256 "$FILE" >> "${BACKUP_DIR}/checksums.txt"
-
-# Keep 30 days of backups
-find "$BACKUP_DIR" -name 'braveskill-*.sql.gz' -type f -mtime +30 -delete
-find "$BACKUP_DIR" -name 'checksums.txt' -size +1M -delete 2>/dev/null || true
-
-echo "✓ Backup complete ($(du -h "$FILE" | cut -f1))"
-echo "  Restore: gunzip -c ${FILE} | psql \"\$DATABASE_URL\""
+find "$BACKUP_DIR" -name 'braveskill-*.sql' -type f -mtime +30 -delete
+echo "✓ D1 export complete: $FILE"

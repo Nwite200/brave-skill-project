@@ -57,6 +57,7 @@ export function assetPath(key: string) {
 
 export async function ensureStorage() {
   if (isR2Configured()) return;
+  if (process.env.CF_WORKER === "1") throw new HttpError("Cloudflare R2 is not configured. Refusing to write files to ephemeral Worker storage.", 503);
   const dirs = ["videos", "pdfs", "images", "apk", "misc"];
   await Promise.all(dirs.map((d) => fs.mkdir(path.join(storageRoot(), d), { recursive: true })));
 }
@@ -98,6 +99,7 @@ export async function saveAsset(input: {
       throw new HttpError("The file could not be stored. Please try again.", 502);
     }
   } else {
+    if (process.env.CF_WORKER === "1") throw new HttpError("Cloudflare R2 is required in production.", 503);
     await ensureStorage();
     await fs.writeFile(assetPath(key), buffer);
   }
@@ -127,6 +129,7 @@ export async function registerAsset(input: {
     const head = await r2Head(key);
     if (!head.ok) throw new HttpError("The uploaded object could not be found.", 404);
   } else {
+    if (process.env.CF_WORKER === "1") throw new HttpError("Cloudflare R2 is required in production.", 503);
     const stat = await fs.stat(assetPath(key)).catch(() => null);
     if (!stat) throw new HttpError("The uploaded object could not be found.", 404);
   }
@@ -147,6 +150,7 @@ export async function deleteAsset(assetId: string) {
   if (!asset) return;
   try {
     if (isR2Configured()) await r2Delete(asset.storageKey);
+    else if (process.env.CF_WORKER === "1") throw new Error("Cloudflare R2 is not configured.");
     else await fs.unlink(assetPath(asset.storageKey));
   } catch {
     /* already gone */
@@ -162,6 +166,7 @@ export async function readAssetBuffer(assetId: string) {
     if (!response.ok) throw new HttpError("File not found.", 404);
     return { asset, buffer: Buffer.from(await response.arrayBuffer()) };
   }
+  if (process.env.CF_WORKER === "1") throw new HttpError("Cloudflare R2 is required in production.", 503);
   const buffer = await fs.readFile(assetPath(asset.storageKey));
   return { asset, buffer };
 }
@@ -174,6 +179,7 @@ export async function assetStat(assetId: string) {
     if (!response.ok) throw new HttpError("File is missing from storage.", 404);
     return { asset, stat: { size: Number(response.headers.get("content-length") || asset.sizeBytes) } };
   }
+  if (process.env.CF_WORKER === "1") throw new HttpError("Cloudflare R2 is required in production.", 503);
   const stat = await fs.stat(assetPath(asset.storageKey)).catch(() => null);
   if (!stat) throw new HttpError("File is missing from storage.", 404);
   return { asset, stat };
@@ -201,6 +207,7 @@ export async function streamAsset(assetId: string, rangeHeader: string | null): 
     return new Response(response.body, { status: response.status, headers });
   }
 
+  if (process.env.CF_WORKER === "1") throw new HttpError("Cloudflare R2 is required in production.", 503);
   const { stat } = await assetStat(assetId);
   const full = assetPath(asset.storageKey);
   const total = stat.size;

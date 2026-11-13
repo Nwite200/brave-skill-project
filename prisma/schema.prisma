@@ -1,5 +1,5 @@
 // Brave Skill — Prisma schema
-// PostgreSQL. All monetary values are stored in kobo (1 NGN = 100 kobo).
+// Cloudflare D1 (SQLite). All monetary values are stored in kobo (1 NGN = 100 kobo).
 
 generator client {
   provider        = "prisma-client-js"
@@ -7,7 +7,7 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "sqlite"
   url      = env("DATABASE_URL")
 }
 

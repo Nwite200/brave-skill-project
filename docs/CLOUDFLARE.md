@@ -30,9 +30,6 @@ In the Cloudflare dashboard:
 Set the following secrets for the Worker (Cloudflare dashboard → Workers & Pages → brave-skill → Settings → Variables and Secrets):
 
 ```bash
-npx wrangler secret put CLOUDFLARE_D1_TOKEN
-npx wrangler secret put CLOUDFLARE_ACCOUNT_ID
-npx wrangler secret put CLOUDFLARE_DATABASE_ID
 npx wrangler secret put R2_ACCOUNT_ID
 npx wrangler secret put R2_ACCESS_KEY_ID
 npx wrangler secret put R2_SECRET_ACCESS_KEY
@@ -44,7 +41,7 @@ npx wrangler secret put RESEND_API_KEY
 
 Set non-secret variables in `wrangler.jsonc`, including `CF_WORKER=1` and `R2_BUCKET=brave-skill-media`.
 
-D1 is supplied through the DB binding declared in wrangler.jsonc. The seed script uses CLOUDFLARE_D1_TOKEN, CLOUDFLARE_ACCOUNT_ID and CLOUDFLARE_DATABASE_ID from your local .env file only; these are not Worker runtime secrets. R2 credentials are used by the existing S3-compatible R2 storage client. The Worker refuses to fall back to local filesystem storage if R2 is not configured.
+D1 is supplied through the DB binding declared in wrangler.jsonc. For the optional seed script only, put CLOUDFLARE_D1_TOKEN, CLOUDFLARE_ACCOUNT_ID and CLOUDFLARE_DATABASE_ID in your local .env file; do not add them as Worker secrets. R2 credentials are used by the existing S3-compatible R2 storage client. The Worker refuses to fall back to local filesystem storage if R2 is not configured.
 
 ## 3. Create the D1 schema
 
@@ -71,8 +68,6 @@ The GitHub Actions workflow deploys on pushes to `main`. Configure these reposit
 
 - `CLOUDFLARE_API_TOKEN` — Workers deployment and D1 permissions
 - `CLOUDFLARE_ACCOUNT_ID`
-- `CLOUDFLARE_D1_TOKEN`
-- `CLOUDFLARE_DATABASE_ID`
 
 The workflow generates and applies the initial D1 SQL before deploying. The database must already exist in the Cloudflare account, and its ID must be set in wrangler.jsonc.
 

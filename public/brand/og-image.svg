@@ -1,0 +1,48 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" width="1200" height="630">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop stop-color="#08060F"/><stop offset="0.55" stop-color="#050509"/><stop offset="1" stop-color="#0A1218"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="50%" cy="0%" r="65%">
+      <stop stop-color="#873BFF" stop-opacity="0.45"/><stop offset="1" stop-color="#873BFF" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="line" x1="0" y1="0" x2="1" y2="0">
+      <stop stop-color="#873BFF"/><stop offset="1" stop-color="#20D9E8"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="630" fill="url(#bg)"/>
+  <rect width="1200" height="630" fill="url(#glow)"/>
+  <g opacity="0.09" stroke="#FFFFFF">
+    <line x1="0" y1="0" x2="0" y2="630"/><line x1="64" y1="0" x2="64" y2="630"/><line x1="128" y1="0" x2="128" y2="630"/><line x1="192" y1="0" x2="192" y2="630"/><line x1="256" y1="0" x2="256" y2="630"/><line x1="320" y1="0" x2="320" y2="630"/><line x1="384" y1="0" x2="384" y2="630"/><line x1="448" y1="0" x2="448" y2="630"/><line x1="512" y1="0" x2="512" y2="630"/><line x1="576" y1="0" x2="576" y2="630"/><line x1="640" y1="0" x2="640" y2="630"/><line x1="704" y1="0" x2="704" y2="630"/><line x1="768" y1="0" x2="768" y2="630"/><line x1="832" y1="0" x2="832" y2="630"/><line x1="896" y1="0" x2="896" y2="630"/><line x1="960" y1="0" x2="960" y2="630"/><line x1="1024" y1="0" x2="1024" y2="630"/><line x1="1088" y1="0" x2="1088" y2="630"/><line x1="1152" y1="0" x2="1152" y2="630"/>
+    <line x1="0" y1="0" x2="1200" y2="0"/><line x1="0" y1="64" x2="1200" y2="64"/><line x1="0" y1="128" x2="1200" y2="128"/><line x1="0" y1="192" x2="1200" y2="192"/><line x1="0" y1="256" x2="1200" y2="256"/><line x1="0" y1="320" x2="1200" y2="320"/><line x1="0" y1="384" x2="1200" y2="384"/><line x1="0" y1="448" x2="1200" y2="448"/><line x1="0" y1="512" x2="1200" y2="512"/><line x1="0" y1="576" x2="1200" y2="576"/>
+  </g>
+  <path d="M-50 500 C 260 380, 520 620, 860 380 C 1040 250, 1140 300, 1260 180" fill="none" stroke="url(#line)" stroke-opacity="0.5" stroke-width="1.4"/>
+  <path d="M-50 560 C 300 450, 560 660, 920 430" fill="none" stroke="#20D9E8" stroke-opacity="0.2" stroke-width="0.8"/>
+  <g transform="translate(96 96) scale(1.15)">
+  <defs>
+    <linearGradient id="neon" x1="14" y1="8" x2="82" y2="90" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#A855F7"/><stop offset="0.45" stop-color="#1677FF"/><stop offset="1" stop-color="#20D9E8"/>
+    </linearGradient>
+    <linearGradient id="soft" x1="30" y1="38" x2="70" y2="88" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFFFFF"/><stop offset="1" stop-color="#C9C2FF"/>
+    </linearGradient>
+    <linearGradient id="bg" x1="12" y1="8" x2="86" y2="92" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#171029"/><stop offset="1" stop-color="#080A12"/>
+    </linearGradient>
+  </defs>
+  <rect x="1.5" y="1.5" width="93" height="93" rx="25" fill="url(#bg)" stroke="url(#neon)" stroke-width="1.4"/>
+  <rect x="7" y="7" width="82" height="82" rx="20" fill="none" stroke="#FFFFFF" stroke-opacity="0.05"/>
+  <path d="M20 27.5 L48 14 L76 27.5 L48 41 Z" fill="url(#neon)"/>
+  <path d="M67 31.5 C73 34 74 40 74 45" stroke="url(#neon)" stroke-width="2.6" stroke-linecap="round"/>
+  <circle cx="74" cy="47.5" r="2.6" fill="#20D9E8"/>
+  <path d="M31 43 V80 M31 43 H51.5 C59.5 43 64.5 47.5 64.5 54.5 C64.5 61.5 59.5 66 51.5 66 H31 M31 66 H55 C63 66 68.5 70.5 68.5 78 C68.5 85 63 89 55 89 H31" stroke="url(#soft)" stroke-width="6.2" stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="76" cy="79" r="3.4" fill="#10C99A"/>
+</g>
+  <text x="240" y="150" font-family="Inter, Helvetica, Arial, sans-serif" font-weight="700" font-size="42" letter-spacing="4" fill="#FFFFFF">BRAVE SKILL</text>
+  <text x="242" y="182" font-family="Inter, Helvetica, Arial, sans-serif" font-weight="500" font-size="13" letter-spacing="6.4" fill="#20D9E8">SKILL ACQUISITION ACADEMY</text>
+  <text x="96" y="360" font-family="Inter, Helvetica, Arial, sans-serif" font-weight="600" font-size="72" letter-spacing="-3" fill="#FFFFFF">Learn practical skills.</text>
+  <text x="96" y="438" font-family="Inter, Helvetica, Arial, sans-serif" font-weight="600" font-size="72" letter-spacing="-3" fill="#B79BFF">Build your future.</text>
+  <text x="100" y="492" font-family="Inter, Helvetica, Arial, sans-serif" font-weight="400" font-size="19" fill="#94A3B8">Solar · CCTV · Electrical · Networking · Access Control</text>
+  <rect x="98" y="532" width="220" height="2" fill="url(#line)"/>
+  <text x="98" y="572" font-family="Inter, Helvetica, Arial, sans-serif" font-weight="500" font-size="13" letter-spacing="4" fill="#94A3B8">LEARN. PRACTICE. BUILD.</text>
+</svg>

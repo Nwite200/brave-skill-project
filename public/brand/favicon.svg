@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96" width="96" height="96">
+  <defs>
+    <linearGradient id="neon" x1="14" y1="8" x2="82" y2="90" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#A855F7"/><stop offset="0.45" stop-color="#1677FF"/><stop offset="1" stop-color="#20D9E8"/>
+    </linearGradient>
+    <linearGradient id="soft" x1="30" y1="38" x2="70" y2="88" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFFFFF"/><stop offset="1" stop-color="#C9C2FF"/>
+    </linearGradient>
+    <linearGradient id="bg" x1="12" y1="8" x2="86" y2="92" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#171029"/><stop offset="1" stop-color="#080A12"/>
+    </linearGradient>
+  </defs>
+  <rect x="1.5" y="1.5" width="93" height="93" rx="25" fill="url(#bg)" stroke="url(#neon)" stroke-width="1.4"/>
+  <rect x="7" y="7" width="82" height="82" rx="20" fill="none" stroke="#FFFFFF" stroke-opacity="0.05"/>
+  <path d="M20 27.5 L48 14 L76 27.5 L48 41 Z" fill="url(#neon)"/>
+  <path d="M67 31.5 C73 34 74 40 74 45" stroke="url(#neon)" stroke-width="2.6" stroke-linecap="round"/>
+  <circle cx="74" cy="47.5" r="2.6" fill="#20D9E8"/>
+  <path d="M31 43 V80 M31 43 H51.5 C59.5 43 64.5 47.5 64.5 54.5 C64.5 61.5 59.5 66 51.5 66 H31 M31 66 H55 C63 66 68.5 70.5 68.5 78 C68.5 85 63 89 55 89 H31" stroke="url(#soft)" stroke-width="6.2" stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="76" cy="79" r="3.4" fill="#10C99A"/>
+</svg>

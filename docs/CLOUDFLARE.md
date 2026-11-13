@@ -13,17 +13,17 @@ Brave Skill runs on Cloudflare Workers. Its application database is **Cloudflare
 | DNS, TLS and edge protection | Cloudflare DNS / WAF |
 | Optional future cache and asynchronous jobs | KV / Queues, when application features need them |
 
-The current code accesses D1 using Prisma's `@prisma/adapter-d1` HTTP adapter. It talks to Cloudflare's D1 API using a scoped Cloudflare API token. The database itself is D1, not an external provider.
+The Worker accesses D1 through its native DB binding using Prisma's `@prisma/adapter-d1`. Payment fulfilment and refunds use D1 batch operations for atomic multi-statement updates; Prisma's D1 adapter does not provide ACID transactions.
 
 ## 1. Create the Cloudflare resources
 
 In the Cloudflare dashboard:
 
 1. Open **Storage & databases → D1 SQL Database** and create a database named `brave-skill-db`.
-2. Copy its database ID.
+2. Copy its database ID and replace `REPLACE_WITH_D1_DATABASE_ID` in `wrangler.jsonc`.
 3. Create an R2 bucket named `brave-skill-media`.
 4. Create an R2 API token scoped to that bucket with Object Read & Write permissions.
-5. Create a Cloudflare API token scoped to D1 read/write for the account. Do not use the Global API Key.
+5. Create a Cloudflare API token scoped to D1 read/write and Workers deployment. Do not use the Global API Key.
 
 ## 2. Configure Worker secrets
 
@@ -44,7 +44,7 @@ npx wrangler secret put RESEND_API_KEY
 
 Set non-secret variables in `wrangler.jsonc`, including `CF_WORKER=1` and `R2_BUCKET=brave-skill-media`.
 
-The D1 token, account ID and database ID are used by the Prisma D1 adapter. R2 credentials are used by the existing S3-compatible R2 storage client. The Worker refuses to fall back to local filesystem storage if R2 is not configured.
+D1 is supplied through the DB binding declared in wrangler.jsonc. The seed script uses CLOUDFLARE_D1_TOKEN, CLOUDFLARE_ACCOUNT_ID and CLOUDFLARE_DATABASE_ID from your local .env file. R2 credentials are used by the existing S3-compatible R2 storage client. The Worker refuses to fall back to local filesystem storage if R2 is not configured.
 
 ## 3. Create the D1 schema
 
@@ -74,7 +74,7 @@ The GitHub Actions workflow deploys on pushes to `main`. Configure these reposit
 - `CLOUDFLARE_D1_TOKEN`
 - `CLOUDFLARE_DATABASE_ID`
 
-The workflow generates and applies the initial D1 SQL before deploying. The database must already exist in the Cloudflare account.
+The workflow generates and applies the initial D1 SQL before deploying. The database must already exist in the Cloudflare account, and its ID must be set in wrangler.jsonc.
 
 ## 5. Verify
 

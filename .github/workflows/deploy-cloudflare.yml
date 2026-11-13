@@ -33,8 +33,13 @@ jobs:
         run: |
           mkdir -p migrations
           npx prisma migrate diff --from-empty --to-schema-datamodel prisma/schema.prisma --script > migrations/0001_initial.sql
-      - name: Apply D1 migrations
-        run: npx wrangler d1 execute brave-skill-db --remote --file=migrations/0001_initial.sql
+      - name: Initialize D1 schema once
+        run: |
+          if npx wrangler d1 execute brave-skill-db --remote --command "SELECT name FROM sqlite_master WHERE type='table' AND name='User';" | grep -q '"User"'; then
+            echo "D1 schema already exists; skipping initial schema."
+          else
+            npx wrangler d1 execute brave-skill-db --remote --file=migrations/0001_initial.sql
+          fi
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}

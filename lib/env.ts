@@ -5,9 +5,6 @@ const required = (key: string, fallback?: string): string => {
 };
 
 export const env = {
-  get databaseUrl() {
-    return required("DATABASE_URL");
-  },
   get authSecret() {
     return required("AUTH_SECRET");
   },
@@ -40,9 +37,6 @@ export const env = {
   },
   get storageDir() {
     return process.env.STORAGE_DIR || "./storage";
-  },
-  get backupDir() {
-    return process.env.BACKUP_DIR || "./backups";
   },
   get adminAlertEmails() {
     return (process.env.ADMIN_ALERT_EMAILS || "")

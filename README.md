@@ -91,20 +91,20 @@ npm run build && npm start
 
 | Variable | Purpose |
 | --- | --- |
-| `DATABASE_URL` | PostgreSQL connection string |
+| `CLOUDFLARE_D1_TOKEN` / `CLOUDFLARE_ACCOUNT_ID` / `CLOUDFLARE_DATABASE_ID` | D1 API credentials for the seed script |
 | `AUTH_SECRET` | 32+ byte secret for signing sessions (rotating it signs everyone out) |
 | `NEXT_PUBLIC_SITE_URL` | Canonical URL, used in emails, webhooks and certificates |
 | `PAYSTACK_PUBLIC_KEY` / `PAYSTACK_SECRET_KEY` | Paystack API keys |
 | `ALLOW_DEMO_PAYMENTS` | Local test checkout. **Must be `false` in production.** |
-| `STORAGE_DIR` | Private media directory (default `./storage`) |
-| `SMTP_*` | Transactional email; falls back to console logging when unset |
-| `BACKUP_DIR` | Database backup destination |
+| `R2_ACCOUNT_ID` / `R2_ACCESS_KEY_ID` / `R2_SECRET_ACCESS_KEY` | Cloudflare R2 object storage credentials |
+| `R2_BUCKET` | Cloudflare R2 bucket name |
+| `RESEND_API_KEY` | Transactional email delivery |
 | `ADMIN_ALERT_EMAILS` | Optional comma-separated alert recipients |
 
 Full reference: [`.env.example`](.env.example).
 
 Primary deployment: **Cloudflare** — see [`docs/CLOUDFLARE.md`](docs/CLOUDFLARE.md).
-Node/VPS fallback: [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md).
+Production deployment is Cloudflare-only. See [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md) for the Cloudflare deployment summary.
 
 ---
 
@@ -116,13 +116,13 @@ Node/VPS fallback: [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md).
 | `npm run build` | Prisma generate + production build |
 | `npm start` | Start the production server |
 | `npm run typecheck` | TypeScript validation |
-| `npm run db:push` | Sync schema without a migration (development) |
-| `npm run db:migrate` | Create a development migration |
+| `npm run db:push` | Initialize D1 schema on a new database |
+| `npm run db:migrate` | Instructions for creating a numbered D1 migration |
 | `npm run db:deploy` | Apply migrations in production |
 | `npm run db:seed` | Seed demo academy data |
 | `npm run db:reset` | Reset schema and re-seed (destructive) |
-| `npm run db:backup` | Compressed PostgreSQL backup with retention |
-| `npm run db:restore -- <file>` | Restore a backup (asks for confirmation) |
+| `npm run db:backup` | Export Cloudflare D1 database |
+| `npm run db:restore -- <file>` | Restore a D1 SQL export (asks for confirmation) |
 | `npm run cf:build` | Build the OpenNext Cloudflare Worker (runs in CI/Pages) |
 | `npm run cf:preview` | Preview the Worker locally (Wrangler) |
 | `npm run cf:deploy` | Deploy to Cloudflare Workers |

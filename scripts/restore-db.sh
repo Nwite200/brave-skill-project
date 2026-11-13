@@ -1,21 +1,22 @@
 #!/usr/bin/env bash
-# Brave Skill — PostgreSQL restore
-# Usage: ./scripts/restore-db.sh backups/braveskill-YYYYMMDD-HHMMSS.sql.gz
+# Restore a SQL export into Cloudflare D1.
+# Usage: ./scripts/restore-db.sh backups/braveskill-YYYYMMDD-HHMMSS.sql
 set -euo pipefail
-
 cd "$(dirname "$0")/.."
-[ -f .env ] && set -a && . ./.env && set +a
 
 FILE="${1:-}"
 if [ -z "$FILE" ] || [ ! -f "$FILE" ]; then
-  echo "Usage: $0 <backup.sql.gz>" >&2
+  echo "Usage: $0 <backup.sql>" >&2
   exit 1
 fi
 
-echo "!! This will overwrite data in the database referenced by DATABASE_URL."
+: "${CLOUDFLARE_API_TOKEN:?Set CLOUDFLARE_API_TOKEN}"
+: "${CLOUDFLARE_ACCOUNT_ID:?Set CLOUDFLARE_ACCOUNT_ID}"
+
+echo "!! This will execute SQL against the remote Cloudflare D1 database."
 printf "Type RESTORE to continue: "
 read -r confirm
 [ "$confirm" = "RESTORE" ] || { echo "Aborted."; exit 1; }
 
-gunzip -c "$FILE" | psql "${DATABASE_URL}" -v ON_ERROR_STOP=1
-echo "✓ Restore complete. Run 'npx prisma migrate deploy' to apply any newer migrations."
+npx wrangler d1 execute brave-skill-db --remote --file="$FILE"
+echo "✓ D1 restore command completed."

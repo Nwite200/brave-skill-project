@@ -92,37 +92,60 @@ enum CouponType {
   FIXED
 }
 
-model User {
-  id             String     @id @default(cuid())
-  name           String
-  email          String     @unique
-  passwordHash   String
-  role           Role       @default(STUDENT)
-  status         UserStatus @default(ACTIVE)
-  phone          String?
-  avatarUrl      String?
-  headline       String?
-  bio            String?
-  expertise      String?
-  emailVerified  DateTime?
-  tokenVersion   Int        @default(0)
-  lastLoginAt    DateTime?
-  createdAt      DateTime   @default(now())
-  updatedAt      DateTime   @updatedAt
+enum AgentRole {
+  USER
+  ASSISTANT
+  SYSTEM
+  TOOL
+}
 
-  instructedCourses Course[]       @relation("CourseInstructor")
-  enrollments       Enrollment[]
-  orders            Order[]
-  quizAttempts      QuizAttempt[]
-  certificates      Certificate[]
-  notifications     Notification[]
-  auditLogs         AuditLog[]     @relation("AuditActor")
-  uploadedAssets    Asset[]
-  refunds           Order[]        @relation("OrderRefundedBy")
-  announcements     Announcement[]
-  createdCoupons    Coupon[]
-  contactMessages   ContactMessage[]
-  passwordTokens    PasswordResetToken[]
+enum SupportTicketStatus {
+  OPEN
+  IN_PROGRESS
+  RESOLVED
+  CLOSED
+}
+
+enum SupportTicketPriority {
+  LOW
+  NORMAL
+  HIGH
+  URGENT
+}
+
+model User {
+  id            String     @id @default(cuid())
+  name          String
+  email         String     @unique
+  passwordHash  String
+  role          Role       @default(STUDENT)
+  status        UserStatus @default(ACTIVE)
+  phone         String?
+  avatarUrl     String?
+  headline      String?
+  bio           String?
+  expertise     String?
+  emailVerified DateTime?
+  tokenVersion  Int        @default(0)
+  lastLoginAt   DateTime?
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+
+  instructedCourses  Course[]             @relation("CourseInstructor")
+  enrollments        Enrollment[]
+  orders             Order[]
+  quizAttempts       QuizAttempt[]
+  certificates       Certificate[]
+  notifications      Notification[]
+  auditLogs          AuditLog[]           @relation("AuditActor")
+  uploadedAssets     Asset[]
+  refunds            Order[]              @relation("OrderRefundedBy")
+  announcements      Announcement[]
+  createdCoupons     Coupon[]
+  contactMessages    ContactMessage[]
+  passwordTokens     PasswordResetToken[]
+  agentConversations AgentConversation[]
+  supportTickets     SupportTicket[]
 
   @@index([role])
   @@index([status])
@@ -169,29 +192,29 @@ model Course {
   createdAt          DateTime    @default(now())
   updatedAt          DateTime    @updatedAt
 
-  category    Category       @relation(fields: [categoryId], references: [id])
-  instructor  User?          @relation("CourseInstructor", fields: [instructorId], references: [id])
-  modules     Module[]
-  enrollments Enrollment[]
-  orders      Order[]
-  quizzes     Quiz[]
-  certificates Certificate[]
+  category      Category       @relation(fields: [categoryId], references: [id])
+  instructor    User?          @relation("CourseInstructor", fields: [instructorId], references: [id])
+  modules       Module[]
+  enrollments   Enrollment[]
+  orders        Order[]
+  quizzes       Quiz[]
+  certificates  Certificate[]
   announcements Announcement[]
-  coupons     Coupon[]
+  coupons       Coupon[]
 
   @@index([categoryId])
   @@index([isPublished, isFeatured])
 }
 
 model Module {
-  id          String    @id @default(cuid())
+  id          String   @id @default(cuid())
   courseId    String
   title       String
   description String?
-  position    Int       @default(0)
-  isPublished Boolean   @default(true)
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  position    Int      @default(0)
+  isPublished Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 
   course  Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
   lessons Lesson[]
@@ -216,9 +239,9 @@ model Lesson {
   createdAt       DateTime   @default(now())
   updatedAt       DateTime   @updatedAt
 
-  module     Module          @relation(fields: [moduleId], references: [id], onDelete: Cascade)
-  videoAsset Asset?          @relation("LessonVideo", fields: [videoAssetId], references: [id])
-  pdfAsset   Asset?          @relation("LessonPdf", fields: [pdfAssetId], references: [id])
+  module     Module           @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+  videoAsset Asset?           @relation("LessonVideo", fields: [videoAssetId], references: [id])
+  pdfAsset   Asset?           @relation("LessonPdf", fields: [pdfAssetId], references: [id])
   progress   LessonProgress[]
 
   @@index([moduleId])
@@ -236,9 +259,9 @@ model Enrollment {
   completedAt    DateTime?
   lastAccessedAt DateTime?
 
-  user       User             @relation(fields: [userId], references: [id], onDelete: Cascade)
-  course     Course           @relation(fields: [courseId], references: [id], onDelete: Cascade)
-  progress   LessonProgress[]
+  user        User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  course      Course           @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  progress    LessonProgress[]
   certificate Certificate?
 
   @@unique([userId, courseId])
@@ -247,14 +270,14 @@ model Enrollment {
 }
 
 model LessonProgress {
-  id              String    @id @default(cuid())
-  enrollmentId    String
-  lessonId        String
-  completed       Boolean   @default(false)
-  watchedSeconds  Int       @default(0)
-  completedAt     DateTime?
-  updatedAt       DateTime  @updatedAt
-  createdAt       DateTime  @default(now())
+  id             String    @id @default(cuid())
+  enrollmentId   String
+  lessonId       String
+  completed      Boolean   @default(false)
+  watchedSeconds Int       @default(0)
+  completedAt    DateTime?
+  updatedAt      DateTime  @updatedAt
+  createdAt      DateTime  @default(now())
 
   enrollment Enrollment @relation(fields: [enrollmentId], references: [id], onDelete: Cascade)
   lesson     Lesson     @relation(fields: [lessonId], references: [id], onDelete: Cascade)
@@ -300,22 +323,22 @@ model Order {
 }
 
 model Coupon {
-  id             String     @id @default(cuid())
-  code           String     @unique
-  description    String?
-  type           CouponType @default(PERCENT)
-  percentOff     Int        @default(0)
-  amountOffKobo  Int        @default(0)
-  courseId       String?
-  maxUses        Int        @default(0)
-  uses           Int        @default(0)
-  minAmountKobo  Int        @default(0)
-  startsAt       DateTime?
-  expiresAt      DateTime?
-  isActive       Boolean    @default(true)
-  createdById    String?
-  createdAt      DateTime   @default(now())
-  updatedAt      DateTime   @updatedAt
+  id            String     @id @default(cuid())
+  code          String     @unique
+  description   String?
+  type          CouponType @default(PERCENT)
+  percentOff    Int        @default(0)
+  amountOffKobo Int        @default(0)
+  courseId      String?
+  maxUses       Int        @default(0)
+  uses          Int        @default(0)
+  minAmountKobo Int        @default(0)
+  startsAt      DateTime?
+  expiresAt     DateTime?
+  isActive      Boolean    @default(true)
+  createdById   String?
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
 
   course  Course? @relation(fields: [courseId], references: [id])
   orders  Order[]
@@ -337,7 +360,7 @@ model Quiz {
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
 
-  course    Course       @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  course    Course        @relation(fields: [courseId], references: [id], onDelete: Cascade)
   questions Question[]
   attempts  QuizAttempt[]
 
@@ -345,14 +368,14 @@ model Quiz {
 }
 
 model Question {
-  id           String @id @default(cuid())
+  id           String  @id @default(cuid())
   quizId       String
   prompt       String
   options      String
   correctIndex Int
   explanation  String?
-  points       Int    @default(1)
-  position     Int    @default(0)
+  points       Int     @default(1)
+  position     Int     @default(0)
 
   quiz Quiz @relation(fields: [quizId], references: [id], onDelete: Cascade)
 
@@ -393,9 +416,9 @@ model Certificate {
   revokeReason  String?
   hash          String
 
-  user       User         @relation(fields: [userId], references: [id], onDelete: Cascade)
-  course     Course       @relation(fields: [courseId], references: [id], onDelete: Cascade)
-  enrollment Enrollment   @relation(fields: [enrollmentId], references: [id], onDelete: Cascade)
+  user        User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  course      Course       @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  enrollment  Enrollment   @relation(fields: [enrollmentId], references: [id], onDelete: Cascade)
   examAttempt QuizAttempt? @relation(fields: [examAttemptId], references: [id])
 
   @@index([userId])
@@ -418,16 +441,16 @@ model Notification {
 }
 
 model Announcement {
-  id          String              @id @default(cuid())
+  id          String               @id @default(cuid())
   title       String
   body        String
   audience    AnnouncementAudience @default(ALL)
   courseId    String?
-  isPublished Boolean             @default(true)
-  publishedAt DateTime            @default(now())
+  isPublished Boolean              @default(true)
+  publishedAt DateTime             @default(now())
   createdById String?
-  createdAt   DateTime            @default(now())
-  updatedAt   DateTime            @updatedAt
+  createdAt   DateTime             @default(now())
+  updatedAt   DateTime             @updatedAt
 
   course    Course? @relation(fields: [courseId], references: [id], onDelete: Cascade)
   createdBy User?   @relation(fields: [createdById], references: [id])
@@ -499,37 +522,37 @@ model AuditLog {
 }
 
 model Asset {
-  id            String    @id @default(cuid())
-  kind          AssetKind
-  storageKey    String    @unique
-  originalName  String
-  mimeType      String
-  sizeBytes     Int       @default(0)
-  durationSec   Int       @default(0)
-  uploadedById  String?
-  createdAt     DateTime  @default(now())
+  id           String    @id @default(cuid())
+  kind         AssetKind
+  storageKey   String    @unique
+  originalName String
+  mimeType     String
+  sizeBytes    Int       @default(0)
+  durationSec  Int       @default(0)
+  uploadedById String?
+  createdAt    DateTime  @default(now())
 
-  uploadedBy  User?    @relation(fields: [uploadedById], references: [id])
-  videoLessons Lesson[] @relation("LessonVideo")
-  pdfLessons   Lesson[] @relation("LessonPdf")
+  uploadedBy   User?        @relation(fields: [uploadedById], references: [id])
+  videoLessons Lesson[]     @relation("LessonVideo")
+  pdfLessons   Lesson[]     @relation("LessonPdf")
   apkReleases  ApkRelease[]
 
   @@index([kind])
 }
 
 model ApkRelease {
-  id           String    @id @default(cuid())
-  version      String
-  versionCode  Int
-  notes        String?
-  assetId      String?
-  downloadUrl  String?
-  sizeBytes    Int       @default(0)
-  minAndroid   String    @default("8.0")
-  isActive     Boolean   @default(true)
-  downloads    Int       @default(0)
-  releasedAt   DateTime  @default(now())
-  createdAt    DateTime  @default(now())
+  id          String   @id @default(cuid())
+  version     String
+  versionCode Int
+  notes       String?
+  assetId     String?
+  downloadUrl String?
+  sizeBytes   Int      @default(0)
+  minAndroid  String   @default("8.0")
+  isActive    Boolean  @default(true)
+  downloads   Int      @default(0)
+  releasedAt  DateTime @default(now())
+  createdAt   DateTime @default(now())
 
   asset Asset? @relation(fields: [assetId], references: [id])
 }
@@ -560,7 +583,80 @@ model WebhookEvent {
 }
 
 model RateLimitBucket {
-  key       String   @id
-  count     Int      @default(0)
-  resetAt   DateTime
+  key     String   @id
+  count   Int      @default(0)
+  resetAt DateTime
+}
+
+model AgentConversation {
+  id            String   @id @default(cuid())
+  userId        String?
+  channel       String   @default("WEB")
+  sessionKey    String?
+  title         String?
+  context       String?
+  messageCount  Int      @default(0)
+  escalated     Boolean  @default(false)
+  resolved      Boolean  @default(false)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  lastMessageAt DateTime @default(now())
+
+  user     User?           @relation(fields: [userId], references: [id], onDelete: SetNull)
+  messages AgentMessage[]
+  tickets  SupportTicket[]
+
+  @@index([userId])
+  @@index([lastMessageAt])
+}
+
+model AgentMessage {
+  id             String    @id @default(cuid())
+  conversationId String
+  role           AgentRole
+  content        String
+  intent         String?
+  toolName       String?
+  toolPayload    String?
+  createdAt      DateTime  @default(now())
+
+  conversation AgentConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+
+  @@index([conversationId])
+}
+
+model AgentKnowledge {
+  id          String   @id @default(cuid())
+  title       String
+  category    String   @default("General")
+  content     String
+  isPublished Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([category])
+}
+
+model SupportTicket {
+  id             String                @id @default(cuid())
+  reference      String                @unique
+  userId         String?
+  conversationId String?
+  name           String
+  email          String
+  phone          String?
+  subject        String
+  message        String
+  status         SupportTicketStatus   @default(OPEN)
+  priority       SupportTicketPriority @default(NORMAL)
+  assignedTo     String?
+  adminNote      String?
+  createdAt      DateTime              @default(now())
+  updatedAt      DateTime              @updatedAt
+
+  user         User?              @relation(fields: [userId], references: [id], onDelete: SetNull)
+  conversation AgentConversation? @relation(fields: [conversationId], references: [id], onDelete: SetNull)
+
+  @@index([status])
+  @@index([createdAt])
 }

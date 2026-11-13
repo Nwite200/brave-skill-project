@@ -246,6 +246,15 @@ class Api {
     await post('/me/password', {'currentPassword': currentPassword, 'newPassword': newPassword});
   }
 
+  Future<Map<String, dynamic>> agentBootstrap() => get('/agent/bootstrap');
+
+  Future<Map<String, dynamic>> agentChat({required String message, String? conversationId}) =>
+      post('/agent/chat', {
+        'message': message,
+        'conversationId': conversationId,
+        'channel': 'ANDROID',
+      });
+
   String mediaUrl(String assetId) => '$baseUrl/api/media/$assetId';
   String certificateUrl(String serial) => '$baseUrl/api/certificates/$serial/pdf';
 

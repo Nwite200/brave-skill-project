@@ -18,6 +18,7 @@ import {
   X,
 } from "lucide-react";
 import { Logo } from "@/components/brand/Logo";
+import { VoiceAgent } from "@/components/agent/VoiceAgent";
 import type { SessionUser } from "@/lib/auth";
 
 const NAV = [
@@ -164,6 +165,7 @@ export function DashboardShell({
 
         <div className={isLearning ? "" : "px-4 py-6 sm:px-6 lg:px-8 lg:py-8"}>{children}</div>
       </div>
+      <VoiceAgent offsetClass="bottom-24 lg:bottom-5" />
     </div>
   );
 }

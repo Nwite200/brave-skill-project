@@ -122,7 +122,7 @@ screenshots after major UI changes; keep personal data out of store images.
 | Question | Answer |
 | --- | --- |
 | Does the app collect or share user data? | Yes — collect; no sharing for advertising |
-| Data types collected | Name, email, phone (optional), user IDs, course progress, quiz results, purchase history, app interactions |
+| Data types collected | Name, email, phone (optional), user IDs, course progress, quiz results, purchase history, app interactions, AI assistant conversation text, voice audio processed by the device speech service when the user chooses the microphone |
 | Data shared with third parties | Paystack is used on the website for payments; the app does not transmit payment data. No advertising SDKs. |
 | Is data encrypted in transit? | Yes (HTTPS) |
 | Can users request deletion? | Yes, via support@academy.emyphilltech.com.ng |
@@ -148,10 +148,24 @@ screenshots after major UI changes; keep personal data out of store images.
 
 ---
 
-## Release notes (first release)
+## Release notes
+
+### 1.1.0 (version code 2)
 
 ```
-Brave Skill Academy 1.0.0
+Brave AI Assistant is here.
+
+• Ask about courses, prices and requirements by voice or text
+• Get spoken answers with a natural academy voice
+• Check your progress, payments and certificate eligibility
+• Escalate to a human with a support ticket reference
+• Same account, same progress, on web and Android
+```
+
+### 1.0.0 (version code 1)
+
+```
+Brave Skill Academy
 
 • Browse the Brave Skill programme catalogue
 • Stream lessons and download field guides

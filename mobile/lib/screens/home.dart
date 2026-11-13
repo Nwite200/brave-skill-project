@@ -4,6 +4,7 @@ import '../api.dart';
 import '../models.dart';
 import '../theme.dart';
 import '../widgets.dart';
+import 'agent.dart';
 import 'course_detail.dart';
 import 'notifications.dart';
 import 'player.dart';
@@ -86,6 +87,10 @@ class _HomeScreenState extends State<HomeScreen> {
                 children: [
                   const Wordmark(size: 34),
                   const Spacer(),
+                  IconButton(
+                    onPressed: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const AgentScreen())),
+                    icon: const Icon(Icons.smart_toy_outlined, color: BsColors.cyan),
+                  ),
                   IconButton(
                     onPressed: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const NotificationsScreen())),
                     icon: const Icon(Icons.notifications_none_rounded, color: BsColors.muted),

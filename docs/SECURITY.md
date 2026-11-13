@@ -138,7 +138,22 @@ retention.
 
 ---
 
-## 9. Incident response
+## 9. AI assistant
+
+- Every private tool checks the server session; private intents are resolved locally
+  when a non-tool language model is configured.
+- The system prompt forbids inventing prices, confirming unverified payments and
+  requesting passwords, PINs or OTPs.
+- Conversation transcripts and tickets are admin-only; voice audio is not stored by
+  Brave Skill.
+- Chat is rate-limited and provider calls time out. Provider failures fall back to the
+  grounded local engine rather than failing silently.
+- Knowledge documents are admin-controlled; do not paste credentials or another
+  student's data into them.
+
+---
+
+## 10. Incident response
 
 1. **Contain** — disable the affected account, rotate the exposed secret, or put the
    site in maintenance if necessary.
@@ -162,7 +177,7 @@ psql "$DATABASE_URL" -c "select \"createdAt\", action, \"entity\", \"entityId\" 
 
 ---
 
-## 10. Pre-launch security checklist
+## 11. Pre-launch security checklist
 
 - [ ] `ALLOW_DEMO_PAYMENTS=false`
 - [ ] Unique `AUTH_SECRET` and database password

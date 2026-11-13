@@ -103,6 +103,21 @@ settings, and the main administrator screens. Output: `qa-shots/`.
 - [x] CSV exports.
 - [x] Audit log entries for administrative actions.
 
+### Brave AI Assistant
+
+- [x] Bootstrap returns identity, greeting, voice settings and suggestions.
+- [x] Course list, price, duration, recommendation and curriculum answers use live data.
+- [x] Follow-up (“how much is it?”) resolves the previous course.
+- [x] Anonymous private-status question asks for sign-in and reveals nothing.
+- [x] Signed-in progress and certificate checks return the correct records.
+- [x] Payment status never claims success for an unknown reference.
+- [x] Human escalation creates a ticket with a reference (authenticated and anonymous).
+- [x] Discount code answers come from active coupons only.
+- [x] Admin settings and knowledge CRUD persist.
+- [x] Disabling the agent hides the widget and the chat API refuses.
+- [x] Widget text chat, speaking state, mute and stop controls.
+- [x] Android build compiles with the assistant screen and microphone permission.
+
 ### Payments
 
 - [x] Server-calculated totals; browser cannot alter amount.

@@ -5,6 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import {
   Activity,
+  Bot,
   BadgePercent,
   Bell,
   BookOpen,
@@ -67,6 +68,7 @@ const GROUPS: { title: string; items: NavItem[] }[] = [
     items: [
       { href: "/admin/announcements", label: "Announcements", icon: Megaphone, roles: ["MASTER_ADMIN", "ADMIN"] },
       { href: "/admin/website", label: "Website", icon: ClipboardList, roles: ["MASTER_ADMIN", "ADMIN"] },
+      { href: "/admin/ai-agent", label: "AI assistant", icon: Bot, roles: ["MASTER_ADMIN", "ADMIN"] },
       { href: "/admin/reports", label: "Reports", icon: FileBarChart, roles: ["MASTER_ADMIN", "ADMIN"] },
       { href: "/admin/settings", label: "Settings", icon: Settings, roles: ["MASTER_ADMIN", "ADMIN"] },
       { href: "/admin/audit-logs", label: "Audit logs", icon: ShieldAlert, roles: ["MASTER_ADMIN", "ADMIN"] },
@@ -132,10 +134,6 @@ export function AdminShell({
         </nav>
 
         <div className="border-t border-white/[0.06] p-3">
-          <div className="mb-2 rounded-xl border border-[#873BFF]/20 bg-gradient-to-br from-[#873BFF]/10 to-transparent p-3">
-            <p className="text-[9.5px] font-medium text-white">Brave Skill operations</p>
-            <p className="mt-1 text-[8.5px] leading-relaxed text-[#7C8AA3]">All payments are verified server-side. Refunds are recorded in the audit log.</p>
-          </div>
           <div className="flex items-center gap-2.5 rounded-lg px-2 py-1.5">
             <span className="flex h-7 w-7 items-center justify-center rounded-md bg-gradient-to-br from-[#873BFF] to-[#1677FF] text-[10px] font-semibold">
               {user.name.slice(0, 1).toUpperCase()}

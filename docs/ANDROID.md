@@ -62,6 +62,7 @@ flutter build apk --release --dart-define=API_BASE=https://academy.emyphilltech.
 | Assessments | Quizzes and final exams with server grading and a countdown timer |
 | Certificates | List, download PDF, verification URL |
 | Profile | Edit profile, change password, notifications, payment history, receipts, support, privacy, sign out |
+| Brave AI Assistant | Voice and text conversations, course discovery, account status, certificates, human escalation |
 
 The app refreshes the catalogue from the backend on every launch and pull-to-refresh,
 so courses published in the admin console appear without an app update.
@@ -180,6 +181,7 @@ Payments policy before each submission, as rules evolve.
 | `INTERNET` | API, video streaming, PDFs |
 | `ACCESS_NETWORK_STATE` | Connection handling |
 | `POST_NOTIFICATIONS` | Reserved for future course/payment alerts; no push is sent today |
+| `RECORD_AUDIO` | Voice questions to the Brave AI Assistant; audio is processed by the device speech service |
 
 No location, contacts, camera, microphone, SMS or background tracking.
 

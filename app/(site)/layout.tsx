@@ -2,6 +2,7 @@ import { SiteHeader } from "@/components/site/SiteHeader";
 import { SiteFooter } from "@/components/site/SiteFooter";
 import { getSessionUser } from "@/lib/auth";
 import { getSettings } from "@/lib/settings";
+import { VoiceAgent } from "@/components/agent/VoiceAgent";
 
 export default async function SiteLayout({ children }: { children: React.ReactNode }) {
   const [user, settings] = await Promise.all([getSessionUser(), getSettings()]);
@@ -17,6 +18,7 @@ export default async function SiteLayout({ children }: { children: React.ReactNo
         {children}
       </main>
       <SiteFooter />
+      <VoiceAgent />
     </div>
   );
 }

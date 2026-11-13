@@ -55,6 +55,33 @@ const sections = [
     ),
   },
   {
+    heading: "Brave AI Assistant and voice",
+    body: (
+      <>
+        <p>
+          The academy offers an AI assistant on the website and Android app. When you use
+          it, we store the conversation text, the assistant's replies, the tools used and
+          any support ticket created. When you choose the microphone, your device or
+          browser asks for permission before recording. Voice recognition may be performed
+          by your browser, operating system or a configured speech provider.
+        </p>
+        <p>
+          Brave Skill does not store raw microphone audio. If a premium server voice is
+          enabled, the text of the reply is sent to the speech provider to generate audio;
+          the text you speak is handled by the selected speech-recognition service. Do not
+          share passwords, PINs, one-time codes or card details with the assistant — it is
+          designed never to ask for them.
+        </p>
+        <p>
+          Conversations are used to answer your question, improve the assistant, review
+          escalations and maintain security. Administrators can access transcripts for
+          support and quality purposes. AI guidance is informational; payments, enrolment
+          and certificates are only confirmed by the academy's verified records.
+        </p>
+      </>
+    ),
+  },
+  {
     heading: "Lawful basis",
     body: (
       <p>

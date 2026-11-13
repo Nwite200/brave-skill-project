@@ -121,6 +121,25 @@ const sections = [
     ),
   },
   {
+    heading: "AI assistant",
+    body: (
+      <>
+        <p>
+          Brave AI Assistant provides automated guidance about courses, enrolment, payments,
+          learning and certificates. It is an informational tool, not a human adviser. Its
+          answers may be incomplete or incorrect, and you should confirm prices, payment
+          status and certificate eligibility in your dashboard or with support.
+        </p>
+        <p>
+          Never send passwords, PINs, one-time codes or card details to the assistant. It is
+          designed not to request them. Conversations may be recorded as text for quality,
+          support escalation and security. Abuse of the assistant, attempts to extract other
+          students' data or prompt-injection attacks are prohibited.
+        </p>
+      </>
+    ),
+  },
+  {
     heading: "Availability and liability",
     body: (
       <p>

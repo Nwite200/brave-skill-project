@@ -120,6 +120,8 @@ npx wrangler secret put AUTH_SECRET           # openssl rand -base64 48
 npx wrangler secret put PAYSTACK_PUBLIC_KEY
 npx wrangler secret put PAYSTACK_SECRET_KEY
 npx wrangler secret put RESEND_API_KEY
+npx wrangler secret put OPENAI_API_KEY        # optional: LLM + premium voice
+npx wrangler secret put GEMINI_API_KEY        # optional alternative
 npx wrangler secret put R2_ACCOUNT_ID
 npx wrangler secret put R2_ACCESS_KEY_ID
 npx wrangler secret put R2_SECRET_ACCESS_KEY

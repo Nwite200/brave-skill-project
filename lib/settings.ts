@@ -25,13 +25,27 @@ export const DEFAULT_SETTINGS: Record<string, string> = {
   "stats.courses": "5",
   "stats.certificates": "3,200",
   "stats.instructors": "12",
-  "app.version": "1.0.0",
+  "app.version": "1.1.0",
   "app.size": "—",
   "app.url": "",
   "app.requires": "Android 8.0 and above",
   "app.notes": "Full offline-friendly lesson player, quizzes, certificates and payment history.",
   "announcement.bar": "",
   "announcement.link": "",
+  "ai.enabled": "true",
+  "ai.name": "Brave AI Assistant",
+  "ai.greeting":
+    "Hello, I'm Brave AI, the learning assistant for Brave Skill Academy. I can help with courses, pricing, enrolment, payments, certificates or the Android app. What can I help you with?",
+  "ai.tone": "warm-professional",
+  "ai.instructions":
+    "Speak like a knowledgeable academy advisor. Be concise, warm and accurate. Never invent prices, policies or payment statuses. Never request passwords, PINs or OTPs. Escalate to a human when unsure.",
+  "ai.voice": "auto",
+  "ai.voiceRate": "0.98",
+  "ai.voicePitch": "1.0",
+  "ai.model": "",
+  "ai.escalationEmail": "support@academy.emyphilltech.com.ng",
+  "ai.allowAnonymous": "true",
+  "ai.widgetPosition": "right",
 };
 
 export const getSettings = cache(async (): Promise<Record<string, string>> => {

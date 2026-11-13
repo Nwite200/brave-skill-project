@@ -151,6 +151,33 @@ Server rules:
 
 ---
 
+## Brave AI Assistant
+
+| Method | Path | Auth | Description |
+| --- | --- | --- | --- |
+| GET | `/agent/bootstrap` | — | Widget identity, greeting, voice config and availability |
+| POST | `/agent/chat` | optional | Conversation turn with tools and retrieval |
+| POST | `/agent/tts` | — | Optional server speech (OpenAI) |
+| POST | `/agent/transcribe` | — | Optional Whisper transcription fallback |
+| GET/PATCH | `/admin/agent/settings` | admin | Assistant configuration |
+| GET/POST | `/admin/agent/knowledge` | admin | Knowledge documents |
+| PATCH/DELETE | `/admin/agent/knowledge/[id]` | admin | Update or delete a document |
+| GET | `/admin/agent/tickets` | admin | Escalation queue |
+| PATCH | `/admin/agent/tickets/[id]` | admin | Status, priority, assignment, note |
+| GET/PATCH | `/admin/agent/conversations/[id]` | admin | Transcript and resolution |
+| GET | `/admin/agent/analytics` | admin | Usage, intents and containment |
+
+Chat body:
+
+```json
+{ "message": "How much is the solar course?", "conversationId": "cm...", "channel": "WEB" }
+```
+
+The assistant never returns private records without a session, and it never confirms
+a payment unless the order is `PAID`.
+
+---
+
 ## Administrator
 
 All endpoints require `ADMIN`/`MASTER_ADMIN`; content endpoints also allow

@@ -9,6 +9,7 @@ Learn. Practice. Build.
 - **Student portal** — dashboard, progress, video/PDF lessons, quizzes, timed final exams, certificates, payment history, notifications, settings.
 - **Administrator console** (`/admin`) — courses, curriculum, categories, students, instructors, transactions, revenue, examinations, certificates, discount codes, announcements, website content, reports, settings, audit logs.
 - **Payments** — Paystack initialise + server-side verification + signed webhook fulfilment + refunds. A guarded local test checkout is included for development.
+- **Brave AI Assistant** — voice and text agent grounded in the live catalogue, payments, progress and approved knowledge, with human escalation and an admin console.
 - **Media security** — videos, PDFs and APKs live outside `public/`, streamed only after an entitlement check, with HTTP Range support.
 - **Android app** — Flutter client in [`mobile/`](mobile/README.md) sharing the same API, ready to build as an APK or Android App Bundle.
 
@@ -179,6 +180,7 @@ See [`docs/SECURITY.md`](docs/SECURITY.md).
 - [Architecture](docs/ARCHITECTURE.md)
 - [Cloudflare deployment](docs/CLOUDFLARE.md)
 - [Cinematic brand intro](docs/BRAND-INTRO.md)
+- [Brave AI Assistant](docs/AI-AGENT.md)
 - [Deployment (Node/VPS fallback)](docs/DEPLOYMENT.md)
 - [Administrator guide](docs/ADMIN-GUIDE.md)
 - [API reference](docs/API.md)

@@ -286,7 +286,31 @@ use them for accounting and monthly reviews.
 
 ---
 
-## 14. Settings and audit logs
+## 14. Brave AI Assistant
+
+**Admin → AI assistant** controls the website and Android voice/text assistant.
+
+- **Overview** — conversations, messages, escalations, open tickets, containment and
+  top intents.
+- **Settings** — enable/disable, assistant name, greeting, tone, voice, speech rate,
+  escalation email, anonymous access and additional instructions. The protected
+  system rules (no invented prices, no private data leaks, no password requests)
+  cannot be overridden.
+- **Knowledge** — add approved documents for policies, admissions or troubleshooting.
+  Courses, FAQs and announcements are indexed automatically. Publishing a new course
+  makes it available to the assistant immediately.
+- **Conversations** — review transcripts, intents and tool use. Private tools are
+  scoped to the signed-in student.
+- **Tickets** — escalations created by the assistant, with status, priority and
+  internal notes.
+
+Test after changes: ask about a course price, check a payment reference while signed
+in, ask for a human and confirm the ticket appears. Never put passwords, PINs or
+customer card data into knowledge documents.
+
+---
+
+## 15. Settings and audit logs
 
 **Admin → Settings** shows the health of the database, Paystack, storage and email,
 lets you edit the academy identity, and lists staff roles. Only a master administrator
@@ -298,7 +322,7 @@ unclear.
 
 ---
 
-## 15. Routine checklist
+## 16. Routine checklist
 
 **Daily**
 
@@ -331,7 +355,7 @@ unclear.
 
 ---
 
-## 16. Troubleshooting
+## 17. Troubleshooting
 
 | Symptom | What to check |
 | --- | --- |

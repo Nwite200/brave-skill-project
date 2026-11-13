@@ -1,7 +1,7 @@
 name: brave_skill
 description: "Brave Skill — Skill Acquisition Academy (Android)"
 publish_to: "none"
-version: 1.0.0+1
+version: 1.1.0+2
 
 environment:
   sdk: ^3.10.0
@@ -16,6 +16,8 @@ dependencies:
   path_provider: ^2.1.5
   open_filex: ^4.5.0
   url_launcher: ^6.3.1
+  speech_to_text: ^7.0.0
+  flutter_tts: ^4.2.0
   intl: ^0.20.2
 
 dev_dependencies:

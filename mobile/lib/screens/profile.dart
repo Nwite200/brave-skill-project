@@ -4,6 +4,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../api.dart';
 import '../theme.dart';
 import '../widgets.dart';
+import 'agent.dart';
 import 'login.dart';
 import 'notifications.dart';
 import 'payments.dart';
@@ -97,6 +98,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ),
             const SizedBox(height: 22),
             const _GroupLabel('Learning'),
+            _menuTile(Icons.smart_toy_outlined, 'Brave AI Assistant', 'Ask by voice or text, 24/7', () {
+              Navigator.of(context).push(MaterialPageRoute(builder: (_) => const AgentScreen()));
+            }),
             _menuTile(Icons.notifications_none, 'Notifications', 'Course, payment and certificate updates', () {
               Navigator.of(context).push(MaterialPageRoute(builder: (_) => const NotificationsScreen()));
             }),
@@ -129,7 +133,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       SizedBox(width: 8),
                       Text('Brave Skill Academy', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Colors.white)),
                       Spacer(),
-                      Text('v1.0.0', style: TextStyle(fontSize: 10, color: BsColors.dim)),
+                      Text('v1.1.0', style: TextStyle(fontSize: 10, color: BsColors.dim)),
                     ],
                   ),
                   const SizedBox(height: 10),

@@ -607,6 +607,9 @@ const coursesSeed: CourseSeed[] = [
 
 async function main() {
   console.log("→ Clearing existing data…");
+  await db.supportTicket.deleteMany();
+  await db.agentConversation.deleteMany();
+  await db.agentKnowledge.deleteMany();
   await db.auditLog.deleteMany();
   await db.notification.deleteMany();
   await db.certificate.deleteMany();
@@ -1016,6 +1019,59 @@ async function main() {
     ],
   });
 
+  await db.agentKnowledge.createMany({
+    data: [
+      {
+        title: "Enrolment and account creation",
+        category: "Admissions",
+        content:
+          "To join Brave Skill, create a free student account at academy.emyphilltech.com.ng/register using your name, email and a password of at least eight characters containing a letter and a number. Verify your details, open the course catalogue, choose a programme and complete checkout through Paystack. Access unlocks automatically after the payment is verified on our server, not from the browser response. The same account works on the Android app. If you do not receive the welcome email, check your spam folder or contact support.",
+      },
+      {
+        title: "Payments, references and receipts",
+        category: "Payments",
+        content:
+          "Brave Skill prices are in Nigerian Naira and are one-time payments unless a page states otherwise. Paystack processes cards, bank transfers and USSD. Every order receives a reference beginning with BS-. A payment is only confirmed when the order status is PAID in our database after server-side verification. Students can download a receipt from Dashboard, Payments. If a payment succeeds but a course remains locked, wait a few minutes for the webhook, then contact support with the transaction reference. Never send your card PIN or OTP to anyone, including support.",
+      },
+      {
+        title: "Refund policy summary",
+        category: "Payments",
+        content:
+          "A refund can be requested within seven days of purchase if less than 20 percent of the course has been completed. Approved refunds are returned through Paystack to the original payment method, usually within ten business days. The enrolment, progress and certificate are revoked when a refund is processed. Duplicate charges, missing access after a successful payment and materially misdescribed courses are always reviewed. Email support with the account email, transaction reference and reason.",
+      },
+      {
+        title: "Certificates and verification",
+        category: "Certificates",
+        content:
+          "Certificates are issued after every published lesson is complete and the final assessment is passed, when the course includes certification. Each certificate has a unique serial such as BS-2026-4F2A9C and an integrity hash. Students download the PDF from Dashboard, Certificates. Employers and clients verify a certificate at academy.emyphilltech.com.ng/verify by entering the serial. Certificates certify completion of training, not a government licence, and can be revoked if obtained through cheating or error.",
+      },
+      {
+        title: "Examinations and assessments",
+        category: "Learning",
+        content:
+          "Most programmes include module quizzes and a final assessment. The final assessment unlocks only after all lessons are marked complete. Questions are graded on the server and the pass mark is displayed on the course, usually 70 percent. Time limits and attempt limits are enforced by the platform, with a short network grace period. After passing, the certificate is issued automatically if the course includes one. Students can review quiz answers but not final exam answers.",
+      },
+      {
+        title: "Android app and offline learning",
+        category: "Android",
+        content:
+          "The Brave Skill Academy Android app uses the same account and backend as the website. Download the APK from academy.emyphilltech.com.ng/download. Android may ask you to allow installs from your browser; this is normal for direct APK distribution. Sign in with your existing details and your purchased courses, progress and certificates appear automatically. Videos stream online. PDF field guides can be downloaded and opened in your device viewer. The Google Play listing is being prepared; the direct APK is the current install method.",
+      },
+      {
+        title: "Course access and learning materials",
+        category: "Learning",
+        content:
+          "After enrolment, open Dashboard, My Courses and select a programme. Lessons are grouped into modules. Video lessons stream through a protected endpoint, PDF field guides can be viewed or downloaded, and text lessons appear in the player. Progress saves automatically; students can also mark a lesson complete manually. The curriculum sidebar shows completed lessons and the next lesson. If a video will not play, check your connection and sign out and back in, then contact support if it persists.",
+      },
+      {
+        title: "Technical support and account help",
+        category: "Support",
+        content:
+          "For sign-in problems, use Forgot Password on the login page. The reset link is valid for 60 minutes. If the email does not arrive, check spam and confirm the address. Staff can reset a password from the administrator console. For persistent technical issues, email support@academy.emyphilltech.com.ng with the account email, device, a description of the problem and any error message. Support hours are Monday to Friday, 9:00 to 17:00 West Africa Time. Never share passwords, PINs or OTPs.",
+      },
+    ],
+  });
+
   await db.siteSetting.createMany({
     data: [
       { key: "announcement.bar", value: "2026 intake now open — save 20% with code BRAVE20" },
@@ -1030,7 +1086,18 @@ async function main() {
       { key: "site.phone", value: "+234 800 000 0000" },
       { key: "site.whatsapp", value: "2348000000000" },
       { key: "site.address", value: "Enugu, Nigeria" },
-      { key: "app.version", value: "1.0.0" },
+      { key: "app.version", value: "1.1.0" },
+      { key: "ai.enabled", value: "true" },
+      { key: "ai.name", value: "Brave AI Assistant" },
+      {
+        key: "ai.greeting",
+        value:
+          "Hello, I'm Brave AI, the learning assistant for Brave Skill Academy. I can help with courses, pricing, enrolment, payments, certificates or the Android app. What can I help you with?",
+      },
+      { key: "ai.tone", value: "warm-professional" },
+      { key: "ai.voice", value: "auto" },
+      { key: "ai.voiceRate", value: "0.98" },
+      { key: "ai.voicePitch", value: "1.0" },
     ],
   });
 
@@ -1051,6 +1118,54 @@ async function main() {
       { userId: student3.id, title: "Certificate issued", body: "Your CCTV certificate is ready.", type: "CERTIFICATE", link: "/dashboard/certificates", readAt: new Date() },
     ],
   });
+
+  const demoConversation = await db.agentConversation.create({
+    data: {
+      userId: student1.id,
+      channel: "WEB",
+      title: "How much is the solar course?",
+      messageCount: 4,
+      lastMessageAt: new Date(Date.now() - 2 * 3600000),
+      context: JSON.stringify({ lastIntent: "pricing", lastCourseTitle: solar.title }),
+      createdAt: new Date(Date.now() - 2 * 3600000),
+      messages: {
+        create: [
+          { role: "USER", content: "Hello, how much is the solar course?", createdAt: new Date(Date.now() - 2 * 3600000) },
+          {
+            role: "ASSISTANT",
+            intent: "pricing",
+            content: "Solar Installation and Inverter Technology costs ₦85,000. That is a one-time payment with lifetime access to the lessons, PDF guides, assessments and updates. Would you like the curriculum or the enrolment steps?",
+            createdAt: new Date(Date.now() - 2 * 3600000 + 4000),
+          },
+          { role: "USER", content: "Does it include a certificate?", createdAt: new Date(Date.now() - 2 * 3600000 + 9000) },
+          {
+            role: "ASSISTANT",
+            intent: "certificate",
+            content: "Yes. You receive a serial-numbered Brave Skill certificate after completing every lesson and passing the final assessment. Clients and employers can verify it on the public verification page.",
+            createdAt: new Date(Date.now() - 2 * 3600000 + 13000),
+          },
+        ],
+      },
+    },
+  });
+
+  await db.supportTicket.create({
+    data: {
+      reference: "BS-TKT-DEMO-4F2A",
+      userId: student2.id,
+      conversationId: null,
+      name: "Emeka Obi",
+      email: "student2@braveskill.ng",
+      phone: "+234 807 333 4444",
+      subject: "Payment succeeded but CCTV course is locked",
+      message: "I paid for the CCTV course yesterday and the money left my account, but the course is still showing as locked. Please check transaction BS-DEMO-REF-8891.",
+      status: "OPEN",
+      priority: "HIGH",
+      createdAt: new Date(Date.now() - 86400000),
+    },
+  });
+
+  void demoConversation;
 
   await db.auditLog.createMany({
     data: [

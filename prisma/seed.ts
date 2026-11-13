@@ -1,12 +1,39 @@
 import "dotenv/config";
 import { PrismaClient, type Role } from "@prisma/client";
+import { PrismaD1 } from "@prisma/adapter-d1";
+import { AwsClient } from "aws4fetch";
 import bcrypt from "bcryptjs";
 import crypto from "crypto";
 import fs from "fs/promises";
 import path from "path";
 import { PDFDocument, StandardFonts, rgb } from "pdf-lib";
 
-const db = new PrismaClient();
+const d1Token = process.env.CLOUDFLARE_D1_TOKEN || "";
+const d1AccountId = process.env.CLOUDFLARE_ACCOUNT_ID || "";
+const d1DatabaseId = process.env.CLOUDFLARE_DATABASE_ID || "";
+if (!d1Token || !d1AccountId || !d1DatabaseId) {
+  throw new Error("Set CLOUDFLARE_D1_TOKEN, CLOUDFLARE_ACCOUNT_ID and CLOUDFLARE_DATABASE_ID before seeding.");
+}
+const db = new PrismaClient({ adapter: new PrismaD1({
+  CLOUDFLARE_D1_TOKEN: d1Token,
+  CLOUDFLARE_ACCOUNT_ID: d1AccountId,
+  CLOUDFLARE_DATABASE_ID: d1DatabaseId,
+}) });
+
+const r2AccountId = process.env.R2_ACCOUNT_ID || "";
+const r2Bucket = process.env.R2_BUCKET || "brave-skill-media";
+const r2AccessKeyId = process.env.R2_ACCESS_KEY_ID || "";
+const r2SecretAccessKey = process.env.R2_SECRET_ACCESS_KEY || "";
+if (!r2AccountId || !r2AccessKeyId || !r2SecretAccessKey) {
+  throw new Error("Set R2_ACCOUNT_ID, R2_ACCESS_KEY_ID and R2_SECRET_ACCESS_KEY before seeding media.");
+}
+const r2Client = new AwsClient({ accessKeyId: r2AccessKeyId, secretAccessKey: r2SecretAccessKey, service: "s3", region: "auto" });
+async function uploadSeedObject(key: string, body: Uint8Array, contentType: string) {
+  const encoded = key.split("/").map((part) => encodeURIComponent(part)).join("/");
+  const url = `https://${r2AccountId}.r2.cloudflarestorage.com/${r2Bucket}/${encoded}`;
+  const response = await r2Client.fetch(url, { method: "PUT", headers: { "Content-Type": contentType }, body: body as unknown as BodyInit });
+  if (!response.ok) throw new Error(`R2 seed upload failed (${response.status}): ${await response.text()}`);
+}
 const ROOT = process.cwd();
 const STORAGE = path.resolve(ROOT, process.env.STORAGE_DIR || "./storage");
 const SEED = path.join(STORAGE, "seed");
@@ -17,10 +44,8 @@ const money = (naira: number) => Math.round(naira * 100);
 
 async function copyVideo(file: string) {
   const key = `videos/${crypto.randomUUID()}.mp4`;
-  const dest = path.join(STORAGE, key);
-  await fs.mkdir(path.dirname(dest), { recursive: true });
   const buffer = await fs.readFile(path.join(SEED, file));
-  await fs.writeFile(dest, buffer);
+  await uploadSeedObject(key, buffer, "video/mp4");
   return db.asset.create({
     data: {
       kind: "VIDEO",
@@ -60,9 +85,7 @@ async function createGuidePdf(title: string, bullets: string[]) {
 
   const bytes = await doc.save();
   const key = `pdfs/${crypto.randomUUID()}.pdf`;
-  const dest = path.join(STORAGE, key);
-  await fs.mkdir(path.dirname(dest), { recursive: true });
-  await fs.writeFile(dest, bytes);
+  await uploadSeedObject(key, bytes, "application/pdf");
   return db.asset.create({
     data: {
       kind: "PDF",

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../api.dart';
+import '../biometric.dart';
 import '../theme.dart';
 import '../widgets.dart';
 import 'login.dart';
@@ -17,6 +18,35 @@ class ProfileScreen extends StatefulWidget {
 
 class _ProfileScreenState extends State<ProfileScreen> {
   bool _signingOut = false;
+  bool _bioAvailable = false;
+  bool _bioBusy = false;
+
+  @override
+  void initState() {
+    super.initState();
+    BiometricLock.instance.isAvailable().then((value) {
+      if (mounted) setState(() => _bioAvailable = value);
+    });
+  }
+
+  Future<void> _toggleBiometric(bool value) async {
+    setState(() => _bioBusy = true);
+    final lock = BiometricLock.instance;
+    final ok = value ? await lock.enable() : await lock.disable();
+    if (!mounted) return;
+    setState(() => _bioBusy = false);
+    if (ok) {
+      showSnack(context, value ? 'Fingerprint unlock is on.' : 'Fingerprint unlock is off.');
+    } else {
+      showSnack(
+        context,
+        value
+            ? 'Could not turn on fingerprint unlock. Check that a fingerprint is set up in your phone settings.'
+            : 'Fingerprint unlock was not turned off.',
+        error: true,
+      );
+    }
+  }
 
   Future<void> _signOut() async {
     final confirmed = await showDialog<bool>(
@@ -108,6 +138,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             _menuTile(Icons.lock_outline, 'Change password', 'Keep your account secure', () {
               Navigator.of(context).push(MaterialPageRoute(builder: (_) => const ChangePasswordScreen()));
             }),
+            _biometricTile(),
             _menuTile(Icons.mail_outline, 'Support', 'Email the academy team', () {
               _launch('mailto:support@academy.emyphilltech.com.ng?subject=Brave%20Skill%20app%20support');
             }),
@@ -171,6 +202,43 @@ class _ProfileScreenState extends State<ProfileScreen> {
               '© Emyphill-Tech Global Solutions Limited',
               textAlign: TextAlign.center,
               style: TextStyle(fontSize: 9, color: Color(0xFF455063)),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _biometricTile() {
+    final enabled = BiometricLock.instance.enabled;
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: BsCard(
+        padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 8),
+        child: Row(
+          children: [
+            Container(
+              width: 32,
+              height: 32,
+              decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.04), borderRadius: BorderRadius.circular(9)),
+              child: const Icon(Icons.fingerprint, size: 17, color: BsColors.muted),
+            ),
+            const SizedBox(width: 11),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text('Fingerprint unlock', style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w500, color: Colors.white)),
+                  Text(
+                    _bioAvailable ? 'Require your fingerprint to open the app' : 'Add a fingerprint in phone settings to use this',
+                    style: const TextStyle(fontSize: 9.5, color: BsColors.dim),
+                  ),
+                ],
+              ),
+            ),
+            Switch(
+              value: enabled,
+              onChanged: (_bioAvailable && !_bioBusy) ? _toggleBiometric : null,
             ),
           ],
         ),

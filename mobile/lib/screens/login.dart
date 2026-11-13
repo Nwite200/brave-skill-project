@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../api.dart';
+import '../biometric.dart';
 import '../theme.dart';
 import '../widgets.dart';
 import 'register.dart';
@@ -40,12 +41,38 @@ class _LoginScreenState extends State<LoginScreen> {
     try {
       await Api.instance.login(_email.text, _password.text);
       if (!mounted) return;
+      await _offerBiometric();
+      if (!mounted) return;
       Navigator.of(context).pushAndRemoveUntil(MaterialPageRoute(builder: (_) => const ShellScreen()), (route) => false);
     } on ApiException catch (error) {
       setState(() => _error = error.message);
     } finally {
       if (mounted) setState(() => _busy = false);
     }
+  }
+
+  /// One-time offer to turn on fingerprint unlock after the first sign-in.
+  Future<void> _offerBiometric() async {
+    final lock = BiometricLock.instance;
+    if (!await lock.shouldOffer()) return;
+    await lock.markOffered();
+    if (!mounted) return;
+    final accept = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: BsColors.panel,
+        title: const Text('Use fingerprint unlock?', style: TextStyle(fontSize: 16)),
+        content: const Text(
+          'Open the app with your fingerprint instead of typing your password each time. You can change this later in Profile.',
+          style: TextStyle(fontSize: 12, height: 1.5, color: BsColors.muted),
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Not now')),
+          TextButton(onPressed: () => Navigator.pop(context, true), child: const Text('Turn on')),
+        ],
+      ),
+    );
+    if (accept == true) await lock.enable();
   }
 
   @override

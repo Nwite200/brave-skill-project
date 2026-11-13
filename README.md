@@ -123,7 +123,7 @@ Node/VPS fallback: [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md).
 | `npm run db:reset` | Reset schema and re-seed (destructive) |
 | `npm run db:backup` | Compressed PostgreSQL backup with retention |
 | `npm run db:restore -- <file>` | Restore a backup (asks for confirmation) |
-| `npm run cf:build` | Build the OpenNext Cloudflare Worker |
+| `npm run cf:build` | Build the OpenNext Cloudflare Worker (runs in CI/Pages) |
 | `npm run cf:preview` | Preview the Worker locally (Wrangler) |
 | `npm run cf:deploy` | Deploy to Cloudflare Workers |
 | `npm run intro:render` | Render the cinematic brand film from the deterministic canvas |

@@ -28,8 +28,6 @@ jobs:
       - run: npx prisma generate
       - name: Apply database migrations
         run: npx prisma migrate deploy
-      - name: Build Next.js
-        run: npm run build
       - name: Build Cloudflare Worker
         run: npm run cf:build
       - name: Deploy

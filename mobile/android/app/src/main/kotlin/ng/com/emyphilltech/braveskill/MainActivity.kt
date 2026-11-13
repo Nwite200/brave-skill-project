@@ -1,5 +1,6 @@
 package ng.com.emyphilltech.braveskill
 
-import io.flutter.embedding.android.FlutterActivity
+import io.flutter.embedding.android.FlutterFragmentActivity
 
-class MainActivity : FlutterActivity()
+// local_auth's BiometricPrompt needs a FragmentActivity.
+class MainActivity : FlutterFragmentActivity()

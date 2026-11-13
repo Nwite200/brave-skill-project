@@ -7,6 +7,7 @@ import 'package:http/http.dart' as http;
 import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'biometric.dart';
 import 'models.dart';
 
 class ApiException implements Exception {
@@ -154,6 +155,7 @@ class Api {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove(_cookieKey);
     await prefs.remove(_userKey);
+    await BiometricLock.instance.disable(requireAuth: false);
   }
 
   Future<void> login(String email, String password) async {

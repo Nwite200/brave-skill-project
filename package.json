@@ -2,7 +2,7 @@
   "name": "brave-skill",
   "version": "1.0.0",
   "private": true,
-  "description": "Brave Skill Skill Acquisition Academy — learning platform by Emyphill-Tech Global Solutions Limited",
+  "description": "Brave Skill Skill Acquisition Academy \u2014 learning platform by Emyphill-Tech Global Solutions Limited",
   "scripts": {
     "dev": "next dev",
     "build": "prisma generate && next build",
@@ -22,11 +22,12 @@
     "qa:screens": "node scripts/qa-screenshots.mjs",
     "qa:flows": "node scripts/qa-flows.mjs",
     "postinstall": "prisma generate",
-    "cf:build": "opennextjs-cloudflare build",
+    "cf:build": "npm run build:worker",
     "cf:preview": "opennextjs-cloudflare preview",
     "cf:deploy": "opennextjs-cloudflare deploy",
     "cf:upload": "opennextjs-cloudflare upload",
-    "intro:render": "node scripts/render-intro.mjs"
+    "intro:render": "node scripts/render-intro.mjs",
+    "build:worker": "prisma generate && opennextjs-cloudflare build"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"

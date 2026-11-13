@@ -17,7 +17,9 @@ import {
   WhySection,
 } from "@/components/marketing/HomeSections";
 
-export const revalidate = 120;
+// This page queries PostgreSQL. Render it on the Worker at request time rather
+// than trying to access production data during the build/prerender phase.
+export const dynamic = "force-dynamic";
 
 export default async function HomePage() {
   const [settings, featured, categories, testimonials, faqs] = await Promise.all([

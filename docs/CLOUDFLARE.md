@@ -156,7 +156,7 @@ export NEXT_PUBLIC_SITE_URL="https://academy.emyphilltech.com.ng"
 export NEXT_PUBLIC_SITE_NAME="Brave Skill"
 export NEXT_PUBLIC_SUPPORT_EMAIL="support@academy.emyphilltech.com.ng"
 
-npm run cf:build      # Next.js + OpenNext worker bundle
+npm run cf:build      # prisma generate + Next.js + OpenNext worker bundle
 npm run cf:deploy     # wrangler deploy
 ```
 

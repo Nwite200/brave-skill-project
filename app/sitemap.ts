@@ -1,6 +1,9 @@
 import type { MetadataRoute } from "next";
 import { db } from "@/lib/db";
 
+// Built per request so the build doesn't need a database connection.
+export const dynamic = "force-dynamic";
+
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const base = process.env.NEXT_PUBLIC_SITE_URL || "https://academy.emyphilltech.com.ng";
   const staticPages = ["", "/courses", "/about", "/contact", "/faqs", "/testimonials", "/download", "/intro", "/privacy", "/terms", "/refunds", "/verify"].map((path) => ({

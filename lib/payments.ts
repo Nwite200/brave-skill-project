@@ -1,5 +1,8 @@
 import "server-only";
 
+import { getCloudflareContext } from "@opennextjs/cloudflare";
+import type { D1Database } from "@cloudflare/workers-types";
+
 import { db } from "@/lib/db";
 import { HttpError } from "@/lib/api";
 import { audit, notify } from "@/lib/audit";
@@ -52,60 +55,48 @@ export async function fulfillOrder(orderId: string, options?: { gatewayReference
   if (order.status === "REFUNDED") throw new HttpError("This order was refunded.", 409);
 
   const now = new Date();
-  const result = await db.$transaction(async (tx) => {
-    const updated = await tx.order.updateMany({
-      where: { id: order.id, status: "PENDING" },
-      data: {
-        status: "PAID",
-        paidAt: now,
-        gatewayReference: options?.gatewayReference ?? order.gatewayReference,
-        receiptNumber: order.receiptNumber ?? `RCPT-${order.reference.replace("BS-", "")}`,
-        ipAddress: options?.ip ?? order.ipAddress,
-      },
-    });
-    if (updated.count === 0) return { alreadyPaid: true as const };
+  const receiptNumber = order.receiptNumber ?? `RCPT-${order.reference.replace("BS-", "")}`;
+  const enrollmentId = crypto.randomUUID();
+  const { env: cloudflareEnv } = getCloudflareContext();
+  const d1 = (cloudflareEnv as unknown as { DB: D1Database }).DB;
+  if (!d1) throw new HttpError("Cloudflare D1 binding is unavailable.", 503);
 
-    const existing = await tx.enrollment.findUnique({
-      where: { userId_courseId: { userId: order.userId, courseId: order.courseId } },
-    });
-
-    let enrollmentId: string;
-    if (existing) {
-      const revived = await tx.enrollment.update({
-        where: { id: existing.id },
-        data: { status: "ACTIVE", pricePaidKobo: order.amountKobo, orderId: order.id },
-      });
-      enrollmentId = revived.id;
-    } else {
-      const created = await tx.enrollment.create({
-        data: {
-          userId: order.userId,
-          courseId: order.courseId,
-          pricePaidKobo: order.amountKobo,
-          source: order.gateway,
-          orderId: order.id,
-          lastAccessedAt: now,
-        },
-      });
-      enrollmentId = created.id;
-    }
-
-    if (order.couponId) {
-      await tx.coupon.update({ where: { id: order.couponId }, data: { uses: { increment: 1 } } });
-    }
-
-    await tx.notification.create({
-      data: {
-        userId: order.userId,
-        type: "PAYMENT",
-        title: "Payment confirmed — course unlocked",
-        body: `${order.course.title} is now available in your learning portal. Receipt ${order.reference}.`,
-        link: `/dashboard/courses/${order.courseId}`,
-      },
-    });
-
-    return { alreadyPaid: false as const, enrollmentId };
-  });
+  // D1's batch API executes this group atomically. Prisma's D1 adapter does not
+  // provide ACID transactions, so payment fulfilment uses D1 batch directly.
+  const batch = await d1.batch([
+    d1.prepare(`UPDATE "Order"
+      SET "status" = 'PAID', "paidAt" = ?, "gatewayReference" = ?,
+          "receiptNumber" = ?, "ipAddress" = ?
+      WHERE "id" = ? AND "status" = 'PENDING'`)
+      .bind(now.toISOString(), options?.gatewayReference ?? order.gatewayReference,
+        receiptNumber, options?.ip ?? order.ipAddress, order.id),
+    d1.prepare(`INSERT INTO "Enrollment"
+      ("id", "userId", "courseId", "status", "pricePaidKobo", "source", "orderId", "lastAccessedAt")
+      SELECT ?, ?, ?, 'ACTIVE', ?, ?, ?, ?
+      WHERE EXISTS (SELECT 1 FROM "Order" WHERE "id" = ? AND "paidAt" = ?)
+      ON CONFLICT ("userId", "courseId") DO UPDATE SET
+        "status" = 'ACTIVE', "pricePaidKobo" = excluded."pricePaidKobo",
+        "source" = excluded."source", "orderId" = excluded."orderId",
+        "lastAccessedAt" = excluded."lastAccessedAt'`)
+      .bind(enrollmentId, order.userId, order.courseId, order.amountKobo, order.gateway,
+        order.id, now.toISOString(), order.id, now.toISOString()),
+    ...(order.couponId ? [d1.prepare(`UPDATE "Coupon" SET "uses" = "uses" + 1
+      WHERE "id" = ? AND EXISTS (SELECT 1 FROM "Order" WHERE "id" = ? AND "paidAt" = ?)`)
+      .bind(order.couponId, order.id, now.toISOString())] : []),
+    d1.prepare(`INSERT INTO "Notification" ("id", "userId", "title", "body", "type", "link", "createdAt")
+      SELECT ?, ?, ?, ?, 'PAYMENT', ?, ?
+      WHERE EXISTS (SELECT 1 FROM "Order" WHERE "id" = ? AND "paidAt" = ?)`)
+      .bind(crypto.randomUUID(), order.userId, "Payment confirmed — course unlocked",
+        `${order.course.title} is now available in your learning portal. Receipt ${order.reference}.`,
+        `/dashboard/courses/${order.courseId}`, now.toISOString(), order.id, now.toISOString()),
+  ]);
+  const changed = Number(batch[0]?.meta?.changes ?? 0);
+  const result = { alreadyPaid: changed === 0 };
+  if (result.alreadyPaid) {
+    const current = await db.order.findUnique({ where: { id: order.id } });
+    if (current?.status === "PAID") return { order: current, alreadyPaid: true };
+    throw new HttpError("Order could not be fulfilled because its status changed.", 409);
+  }
 
   if (!result.alreadyPaid) {
     await audit({
@@ -190,35 +181,36 @@ export async function refundOrder(input: {
   const amount = Math.min(input.amountKobo ?? order.amountKobo, order.amountKobo);
   const now = new Date();
 
-  await db.$transaction(async (tx) => {
-    await tx.order.update({
-      where: { id: order.id },
-      data: {
-        status: "REFUNDED",
-        refundedAt: now,
-        refundAmountKobo: amount,
-        refundReason: input.reason,
-        refundedById: input.adminId,
-      },
-    });
-    await tx.enrollment.updateMany({
-      where: { userId: order.userId, courseId: order.courseId },
-      data: { status: "REVOKED" },
-    });
-    await tx.certificate.updateMany({
-      where: { userId: order.userId, courseId: order.courseId, revokedAt: null },
-      data: { revokedAt: now, revokeReason: "Course refunded" },
-    });
-    await tx.notification.create({
-      data: {
-        userId: order.userId,
-        type: "PAYMENT",
-        title: "Refund processed",
-        body: `A refund of ${formatNaira(amount)} was processed for ${order.course.title}. Access has been updated.`,
-        link: "/dashboard/payments",
-      },
-    });
-  });
+  const { env: cloudflareEnv } = getCloudflareContext();
+  const d1 = (cloudflareEnv as unknown as { DB: D1Database }).DB;
+  if (!d1) throw new HttpError("Cloudflare D1 binding is unavailable.", 503);
+  const refundedAt = now.toISOString();
+
+  // Keep refund status, access revocation, certificate revocation and notice in
+  // one D1 batch so a partial refund transition cannot leave access enabled.
+  const batch = await d1.batch([
+    d1.prepare(`UPDATE "Order" SET "status" = 'REFUNDED', "refundedAt" = ?,
+      "refundAmountKobo" = ?, "refundReason" = ?, "refundedById" = ?
+      WHERE "id" = ? AND "status" = 'PAID'`)
+      .bind(refundedAt, amount, input.reason, input.adminId, order.id),
+    d1.prepare(`UPDATE "Enrollment" SET "status" = 'REVOKED'
+      WHERE "userId" = ? AND "courseId" = ?
+      AND EXISTS (SELECT 1 FROM "Order" WHERE "id" = ? AND "refundedAt" = ?)`)
+      .bind(order.userId, order.courseId, order.id, refundedAt),
+    d1.prepare(`UPDATE "Certificate" SET "revokedAt" = ?, "revokeReason" = 'Course refunded'
+      WHERE "userId" = ? AND "courseId" = ? AND "revokedAt" IS NULL
+      AND EXISTS (SELECT 1 FROM "Order" WHERE "id" = ? AND "refundedAt" = ?)`)
+      .bind(refundedAt, order.userId, order.courseId, order.id, refundedAt),
+    d1.prepare(`INSERT INTO "Notification" ("id", "userId", "title", "body", "type", "link", "createdAt")
+      SELECT ?, ?, 'Refund processed', ?, 'PAYMENT', '/dashboard/payments', ?
+      WHERE EXISTS (SELECT 1 FROM "Order" WHERE "id" = ? AND "refundedAt" = ?)`)
+      .bind(crypto.randomUUID(), order.userId,
+        `A refund of ${formatNaira(amount)} was processed for ${order.course.title}. Access has been updated.`,
+        refundedAt, order.id, refundedAt),
+  ]);
+  if (Number(batch[0]?.meta?.changes ?? 0) === 0) {
+    throw new HttpError("This order was already refunded or its status changed.", 409);
+  }
 
   await audit({
     actorId: input.adminId,

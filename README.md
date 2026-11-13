@@ -104,7 +104,7 @@ npm run build && npm start
 Full reference: [`.env.example`](.env.example).
 
 Primary deployment: **Cloudflare** — see [`docs/CLOUDFLARE.md`](docs/CLOUDFLARE.md).
-Production deployment is Cloudflare-only. See [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md) for the Cloudflare deployment summary.
+Production deployment is Cloudflare-only. Follow [`docs/CLOUDFLARE.md`](docs/CLOUDFLARE.md).
 
 ---
 
@@ -114,13 +114,13 @@ Production deployment is Cloudflare-only. See [`docs/DEPLOYMENT.md`](docs/DEPLOY
 | --- | --- |
 | `npm run dev` | Development server |
 | `npm run build` | Prisma generate + production build |
-| `npm start` | Start the production server |
+| `npm run cf:preview` | Run the built Worker locally |
 | `npm run typecheck` | TypeScript validation |
 | `npm run db:push` | Initialize D1 schema on a new database |
 | `npm run db:migrate` | Instructions for creating a numbered D1 migration |
-| `npm run db:deploy` | Apply migrations in production |
+| `npm run db:deploy` | Apply the initial D1 schema on a new database |
 | `npm run db:seed` | Seed demo academy data |
-| `npm run db:reset` | Reset schema and re-seed (destructive) |
+| `npm run db:reset` | Guidance for creating a fresh D1 database |
 | `npm run db:backup` | Export Cloudflare D1 database |
 | `npm run db:restore -- <file>` | Restore a D1 SQL export (asks for confirmation) |
 | `npm run cf:build` | Build the OpenNext Cloudflare Worker (runs in CI/Pages) |

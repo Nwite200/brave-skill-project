@@ -15,7 +15,7 @@
     "db:seed": "tsx prisma/seed.ts",
     "db:studio": "echo 'Prisma Studio is not supported for the remote D1 adapter. Use Cloudflare D1 dashboard or wrangler d1 execute.'",
     "db:reset": "echo 'D1 does not support prisma migrate reset. For a new database, create a fresh D1 database and run npm run db:d1:generate.'",
-    "setup": "npm run db:d1:generate && npm run db:d1:apply",
+    "setup": "npm run db:d1:generate && npm run db:d1:apply && npm run db:seed",
     "db:backup": "bash scripts/backup-db.sh",
     "db:restore": "bash scripts/restore-db.sh",
     "brand:assets": "node scripts/brand-assets.mjs",
@@ -29,7 +29,7 @@
     "intro:render": "node scripts/render-intro.mjs",
     "build:worker": "prisma generate && opennextjs-cloudflare build",
     "db:d1:generate": "mkdir -p migrations && prisma migrate diff --from-empty --to-schema-datamodel prisma/schema.prisma --script > migrations/0001_initial.sql",
-    "db:d1:apply": "wrangler d1 migrations apply brave-skill-db --remote"
+    "db:d1:apply": "wrangler d1 execute brave-skill-db --remote --file=migrations/0001_initial.sql"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"

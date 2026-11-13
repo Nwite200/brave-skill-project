@@ -10,7 +10,7 @@
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
     "db:push": "npm run db:d1:generate && npm run db:d1:apply",
-    "db:migrate": "npm run db:d1:generate && npm run db:d1:apply",
+    "db:migrate": "echo 'Create a numbered SQL migration from the Prisma schema and apply it with Wrangler D1. See docs/CLOUDFLARE.md.'",
     "db:deploy": "npm run db:d1:apply",
     "db:seed": "tsx prisma/seed.ts",
     "db:studio": "echo 'Prisma Studio is not supported for the remote D1 adapter. Use Cloudflare D1 dashboard or wrangler d1 execute.'",
@@ -29,7 +29,7 @@
     "intro:render": "node scripts/render-intro.mjs",
     "build:worker": "prisma generate && opennextjs-cloudflare build",
     "db:d1:generate": "mkdir -p migrations && prisma migrate diff --from-empty --to-schema-datamodel prisma/schema.prisma --script > migrations/0001_initial.sql",
-    "db:d1:apply": "wrangler d1 execute brave-skill-db --remote --file=migrations/0001_initial.sql"
+    "db:d1:apply": "if wrangler d1 execute brave-skill-db --remote --command \"SELECT name FROM sqlite_master WHERE type='table' AND name='User';\" | grep -q 'User'; then echo 'D1 schema already exists; create a numbered migration for changes.'; else wrangler d1 execute brave-skill-db --remote --file=migrations/0001_initial.sql; fi"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"

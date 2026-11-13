@@ -49,7 +49,9 @@ cp .env.example .env
 Edit `.env`:
 
 ```env
-CLOUDFLARE_D1_TOKEN="..."\nCLOUDFLARE_ACCOUNT_ID="..."\nCLOUDFLARE_DATABASE_ID="..."
+CLOUDFLARE_D1_TOKEN="..."
+CLOUDFLARE_ACCOUNT_ID="..."
+CLOUDFLARE_DATABASE_ID="..."
 AUTH_SECRET="<openssl rand -base64 48>"
 NEXT_PUBLIC_SITE_URL="http://localhost:3000"
 ```
@@ -57,9 +59,9 @@ NEXT_PUBLIC_SITE_URL="http://localhost:3000"
 ### 3. Create the schema and seed demo content
 
 ```bash
-createdb braveskill
-npx prisma db push          # or: npx prisma migrate deploy in production
-npm run db:seed             # demo academy: 5 courses, students, orders, certificates
+npm run db:d1:generate
+npm run db:d1:apply
+npm run db:seed             # demo academy content and R2 media
 ```
 
 The seed copies short demo videos from `storage/seed/` into private storage and
@@ -70,7 +72,7 @@ generates branded PDF field guides. Re-run it any time to reset demo data.
 ```bash
 npm run dev      # http://localhost:3000
 # or
-npm run build && npm start
+npm run cf:build && npm run cf:preview
 ```
 
 ### Demo accounts

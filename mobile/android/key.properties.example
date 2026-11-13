@@ -1,0 +1,14 @@
+<!--
+  Brave Skill Android signing configuration.
+
+  1. Copy this file to android/key.properties (it is gitignored).
+  2. Create a keystore in company custody:
+       keytool -genkey -v -keystore ~/brave-skill-upload.jks \
+         -keyalg RSA -keysize 2048 -validity 10000 -alias braveskill
+  3. Fill in the values below. Never commit the keystore or this file.
+  4. Back up the keystore and password in the company password manager.
+-->
+storePassword=CHANGE_ME
+keyPassword=CHANGE_ME
+keyAlias=braveskill
+storeFile=/absolute/path/to/brave-skill-upload.jks

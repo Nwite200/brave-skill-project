@@ -1,0 +1,195 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+    <title>Brave Skill — Brand Film</title>
+    <style>
+      @font-face {
+        font-family: "Inter";
+        src: url("/brand/fonts/Inter-Regular.ttf") format("truetype");
+        font-weight: 400;
+        font-display: block;
+      }
+      @font-face {
+        font-family: "Inter";
+        src: url("/brand/fonts/Inter-Medium.ttf") format("truetype");
+        font-weight: 500;
+        font-display: block;
+      }
+      @font-face {
+        font-family: "Inter";
+        src: url("/brand/fonts/Inter-SemiBold.ttf") format("truetype");
+        font-weight: 600;
+        font-display: block;
+      }
+      @font-face {
+        font-family: "Inter";
+        src: url("/brand/fonts/Inter-Bold.ttf") format("truetype");
+        font-weight: 700;
+        font-display: block;
+      }
+      * { box-sizing: border-box; }
+      html, body {
+        margin: 0;
+        padding: 0;
+        background: #050509;
+        color: #fff;
+        overflow: hidden;
+        font-family: Inter, system-ui, sans-serif;
+      }
+      #stage {
+        position: fixed;
+        inset: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: #050509;
+      }
+      canvas {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+        display: block;
+      }
+      body.transparent, body.transparent #stage { background: transparent !important; }
+      body.transparent { background: transparent !important; }
+      body.record #stage, body.record canvas {
+        width: 100vw;
+        height: 100vh;
+        object-fit: fill;
+      }
+      #ui {
+        position: fixed;
+        inset: auto 0 0 0;
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        padding: 18px 22px;
+        font-size: 11px;
+        letter-spacing: 0.08em;
+        color: rgba(255,255,255,0.55);
+        background: linear-gradient(to top, rgba(5,5,9,0.85), transparent);
+        transition: opacity 0.4s ease;
+      }
+      #ui button {
+        border: 1px solid rgba(255,255,255,0.16);
+        background: rgba(255,255,255,0.04);
+        color: #fff;
+        padding: 8px 14px;
+        border-radius: 999px;
+        font: inherit;
+        cursor: pointer;
+      }
+      #ui button:hover { border-color: rgba(255,255,255,0.36); }
+      #bar {
+        flex: 1;
+        height: 2px;
+        background: rgba(255,255,255,0.08);
+        border-radius: 99px;
+        overflow: hidden;
+      }
+      #fill {
+        height: 100%;
+        width: 0%;
+        background: linear-gradient(90deg, #873BFF, #20D9E8);
+      }
+      body.record #ui { display: none; }
+      body.poster #ui { display: none; }
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        color: rgba(255,255,255,0.7);
+      }
+    </style>
+  </head>
+  <body>
+    <div id="stage"><canvas id="canvas"></canvas></div>
+    <div id="ui">
+      <span class="brand">BRAVE SKILL · BRAND FILM</span>
+      <button id="replay">Replay</button>
+      <div id="bar"><div id="fill"></div></div>
+      <span id="clock">00:00</span>
+    </div>
+    <script src="./intro.js"></script>
+    <script>
+      const params = new URLSearchParams(location.search);
+      const record = params.get("record") === "1";
+      const logoOnly = params.get("logoOnly") === "1";
+      const transparent = params.get("transparent") === "1" || logoOnly;
+      const short = params.get("short") === "1";
+      const poster = params.has("t");
+      const width = Number(params.get("w") || (short ? 1080 : 1920));
+      const height = Number(params.get("h") || (short ? 1080 : 1080));
+      if (record) document.body.classList.add("record");
+      if (transparent) {
+        document.body.classList.add("transparent");
+        document.documentElement.style.background = "transparent";
+      }
+      if (poster) document.body.classList.add("poster");
+
+      const canvas = document.getElementById("canvas");
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext("2d", { alpha: transparent });
+
+      const duration = short ? 2400 : window.BraveIntro.duration;
+      let started = 0;
+      let raf = 0;
+      let playing = !record && !poster;
+      let frozenAt = poster ? Number(params.get("t")) : 0;
+
+      function drawAt(ms) {
+        window.BraveIntro.render(ctx, ms, { logoOnly, transparent, short });
+        const fill = document.getElementById("fill");
+        const clock = document.getElementById("clock");
+        if (fill) fill.style.width = `${Math.min(100, (ms / duration) * 100)}%`;
+        if (clock) {
+          const seconds = Math.floor(ms / 1000);
+          clock.textContent = `00:${String(seconds).padStart(2, "0")}`;
+        }
+      }
+
+      function frame(now) {
+        if (!started) started = now;
+        const elapsed = now - started;
+        drawAt(elapsed);
+        if (elapsed < duration) raf = requestAnimationFrame(frame);
+        else playing = false;
+      }
+
+      function play() {
+        cancelAnimationFrame(raf);
+        started = 0;
+        playing = true;
+        raf = requestAnimationFrame(frame);
+      }
+
+      function seek(ms) {
+        cancelAnimationFrame(raf);
+        playing = false;
+        frozenAt = ms;
+        drawAt(ms);
+      }
+
+      window.seek = seek;
+      window.playIntro = play;
+      window.__INTRO_DURATION__ = duration;
+
+      document.getElementById("replay").addEventListener("click", play);
+
+      Promise.all([
+        document.fonts.load("600 72px Inter"),
+        document.fonts.load("500 14px Inter"),
+        document.fonts.load("400 14px Inter"),
+      ]).then(() => {
+        window.__READY__ = true;
+        document.body.dataset.ready = "true";
+        if (poster) drawAt(frozenAt);
+        else if (playing) play();
+        else drawAt(0);
+      });
+    </script>
+  </body>
+</html>

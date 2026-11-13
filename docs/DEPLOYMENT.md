@@ -3,6 +3,10 @@
 Target domain: **academy.emyphilltech.com.ng**
 Owner: **Emyphill-Tech Global Solutions Limited**
 
+> **Primary platform: Cloudflare.** See [`CLOUDFLARE.md`](CLOUDFLARE.md) for the
+> Workers + R2 + Hyperdrive deployment. This document covers the equivalent
+> Node/VPS deployment and remains the fallback and local production reference.
+
 ---
 
 ## 1. Recommended production setup

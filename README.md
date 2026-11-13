@@ -20,12 +20,13 @@ Learn. Practice. Build.
 | --- | --- |
 | Web | Next.js 15 (App Router), React 19, TypeScript |
 | Styling | Tailwind CSS v4, custom design tokens |
-| Database | PostgreSQL 16 + Prisma ORM |
+| Database | PostgreSQL 16 + Prisma ORM (Cloudflare Hyperdrive at the edge) |
 | Auth | Role-based sessions (JWT in HTTP-only cookies), bcrypt |
 | Payments | Paystack (NGN) + webhook HMAC validation |
 | Documents | `pdf-lib` certificates and receipts |
-| Media | Private filesystem storage with authorised streaming (S3-compatible optional) |
+| Media | Cloudflare R2 (S3 API) with authorised streaming; local filesystem fallback |
 | Mobile | Flutter 3 (Android) |
+| Deployment | Cloudflare Workers (OpenNext), R2, Hyperdrive, DNS |
 
 ---
 
@@ -99,7 +100,10 @@ npm run build && npm start
 | `BACKUP_DIR` | Database backup destination |
 | `ADMIN_ALERT_EMAILS` | Optional comma-separated alert recipients |
 
-Full reference: [`.env.example`](.env.example). Deployment guide: [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md).
+Full reference: [`.env.example`](.env.example).
+
+Primary deployment: **Cloudflare** — see [`docs/CLOUDFLARE.md`](docs/CLOUDFLARE.md).
+Node/VPS fallback: [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md).
 
 ---
 
@@ -118,6 +122,10 @@ Full reference: [`.env.example`](.env.example). Deployment guide: [`docs/DEPLOYM
 | `npm run db:reset` | Reset schema and re-seed (destructive) |
 | `npm run db:backup` | Compressed PostgreSQL backup with retention |
 | `npm run db:restore -- <file>` | Restore a backup (asks for confirmation) |
+| `npm run cf:build` | Build the OpenNext Cloudflare Worker |
+| `npm run cf:preview` | Preview the Worker locally (Wrangler) |
+| `npm run cf:deploy` | Deploy to Cloudflare Workers |
+| `npm run intro:render` | Render the cinematic brand film from the deterministic canvas |
 | `npm run brand:assets` | Regenerate PNG logos, icons, OG and Play assets |
 | `npm run qa:screens` | Desktop/mobile screenshots of key screens (Puppeteer) |
 | `npm run qa:flows` | End-to-end purchase, learning, quiz and admin flows |
@@ -169,7 +177,9 @@ See [`docs/SECURITY.md`](docs/SECURITY.md).
 ## Documentation
 
 - [Architecture](docs/ARCHITECTURE.md)
-- [Deployment](docs/DEPLOYMENT.md)
+- [Cloudflare deployment](docs/CLOUDFLARE.md)
+- [Cinematic brand intro](docs/BRAND-INTRO.md)
+- [Deployment (Node/VPS fallback)](docs/DEPLOYMENT.md)
 - [Administrator guide](docs/ADMIN-GUIDE.md)
 - [API reference](docs/API.md)
 - [Android build & Play Store](docs/ANDROID.md)

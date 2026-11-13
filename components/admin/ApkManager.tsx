@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useRef, useState } from "react";
 import { AlertCircle, Download, Loader2, Plus, Smartphone, Trash2, Upload, X } from "lucide-react";
 import { formatDate, fileSize } from "@/lib/format";
+import { uploadAsset } from "@/components/admin/upload";
 
 type Release = {
   id: string;
@@ -34,13 +35,8 @@ export function ApkManager({ releases }: { releases: Release[] }) {
     try {
       let assetId = form.assetId;
       if (file) {
-        const body = new FormData();
-        body.append("file", file);
-        body.append("kind", "APK");
-        const upload = await fetch("/api/admin/uploads", { method: "POST", body });
-        const uploadData = await upload.json();
-        if (!upload.ok) throw new Error(uploadData.error || "APK upload failed.");
-        assetId = uploadData.asset.id;
+        const asset = await uploadAsset(file, "APK");
+        assetId = asset.id;
       }
       const res = await fetch("/api/admin/content/apk", {
         method: "POST",

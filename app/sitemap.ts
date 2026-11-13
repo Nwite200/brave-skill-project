@@ -3,7 +3,7 @@ import { db } from "@/lib/db";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const base = process.env.NEXT_PUBLIC_SITE_URL || "https://academy.emyphilltech.com.ng";
-  const staticPages = ["", "/courses", "/about", "/contact", "/faqs", "/testimonials", "/download", "/privacy", "/terms", "/refunds", "/verify"].map((path) => ({
+  const staticPages = ["", "/courses", "/about", "/contact", "/faqs", "/testimonials", "/download", "/intro", "/privacy", "/terms", "/refunds", "/verify"].map((path) => ({
     url: `${base}${path}`,
     lastModified: new Date(),
     changeFrequency: path === "" ? ("weekly" as const) : ("monthly" as const),

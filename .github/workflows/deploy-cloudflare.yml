@@ -1,0 +1,48 @@
+name: Deploy to Cloudflare
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: cloudflare-production
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      NEXT_PUBLIC_SITE_URL: https://academy.emyphilltech.com.ng
+      NEXT_PUBLIC_SITE_NAME: Brave Skill
+      NEXT_PUBLIC_SUPPORT_EMAIL: support@academy.emyphilltech.com.ng
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npx prisma generate
+      - name: Apply database migrations
+        run: npx prisma migrate deploy
+      - name: Build Next.js
+        run: npm run build
+      - name: Build Cloudflare Worker
+        run: npm run cf:build
+      - name: Deploy
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: deploy
+      - name: Smoke test
+        run: |
+          for i in 1 2 3 4 5; do
+            code=$(curl -s -o /dev/null -w "%{http_code}" https://academy.emyphilltech.com.ng/api/health || true)
+            [ "$code" = "200" ] && exit 0
+            sleep 15
+          done
+          echo "Health check failed"; exit 1

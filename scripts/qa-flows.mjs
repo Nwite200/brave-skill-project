@@ -131,7 +131,7 @@ try {
   await clickText("New category");
   await page.waitForSelector("#f-name", { timeout: 10000 });
   await page.type("#f-name", "QA Automation Track");
-  await page.type("#f-desc", "Created by the automated end-to-end test.");
+  await page.type("#f-description", "Created by the automated end-to-end test.");
   await clickText("Create");
   await page.waitForFunction(() => document.body.innerText.includes("QA Automation Track"), { timeout: 15000 });
   console.log("   category created");

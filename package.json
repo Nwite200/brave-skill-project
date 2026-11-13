@@ -2,7 +2,7 @@
   "name": "brave-skill",
   "version": "1.0.0",
   "private": true,
-  "description": "Brave Skill Skill Acquisition Academy \u2014 learning platform by Emyphill-Tech Global Solutions Limited",
+  "description": "Brave Skill Skill Acquisition Academy — learning platform by Emyphill-Tech Global Solutions Limited",
   "scripts": {
     "dev": "next dev",
     "build": "prisma generate && next build",
@@ -21,21 +21,29 @@
     "brand:assets": "node scripts/brand-assets.mjs",
     "qa:screens": "node scripts/qa-screenshots.mjs",
     "qa:flows": "node scripts/qa-flows.mjs",
-    "postinstall": "prisma generate"
+    "postinstall": "prisma generate",
+    "cf:build": "opennextjs-cloudflare build",
+    "cf:preview": "opennextjs-cloudflare preview",
+    "cf:deploy": "opennextjs-cloudflare deploy",
+    "cf:upload": "opennextjs-cloudflare upload",
+    "intro:render": "node scripts/render-intro.mjs"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"
   },
   "dependencies": {
+    "@prisma/adapter-pg": "^6.19.3",
     "@prisma/client": "6.19.3",
+    "aws4fetch": "^1.0.20",
     "bcryptjs": "^3.0.2",
     "clsx": "^2.1.1",
     "dotenv": "^18.0.10",
     "jose": "^6.1.0",
     "lucide-react": "^0.546.0",
-    "next": "15.5.9",
-    "nodemailer": "^7.0.9",
+    "next": "^15.5.29",
     "pdf-lib": "^1.17.1",
+    "pg": "^8.23.1",
+    "pg-cloudflare": "^1.4.1",
     "qrcode": "^1.5.4",
     "react": "19.1.0",
     "react-dom": "19.1.0",
@@ -43,18 +51,20 @@
     "zod": "^4.1.12"
   },
   "devDependencies": {
+    "@opennextjs/cloudflare": "^1.20.17",
     "@tailwindcss/postcss": "^4.1.14",
     "@types/bcryptjs": "^2.4.6",
     "@types/node": "^22.18.8",
-    "@types/nodemailer": "^7.0.2",
     "@types/qrcode": "^1.5.6",
     "@types/react": "^19.1.13",
     "@types/react-dom": "^19.1.9",
     "prisma": "6.19.3",
     "puppeteer-core": "^25.17.0",
+    "rclone.js": "^0.6.6",
     "sharp": "^0.35.5",
     "tailwindcss": "^4.1.14",
     "tsx": "^4.20.6",
-    "typescript": "^5.9.2"
+    "typescript": "^5.9.2",
+    "wrangler": "^4.162.0"
   }
 }

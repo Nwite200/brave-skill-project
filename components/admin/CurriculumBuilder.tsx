@@ -17,6 +17,7 @@ import {
   X,
 } from "lucide-react";
 import { formatDuration } from "@/lib/format";
+import { uploadAsset } from "@/components/admin/upload";
 
 type LessonRow = {
   id: string;
@@ -145,17 +146,12 @@ export function CurriculumBuilder({
     setUploading(true);
     setError("");
     try {
-      const body = new FormData();
-      body.append("file", file);
-      body.append("kind", kind);
-      const res = await fetch("/api/admin/uploads", { method: "POST", body });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Upload failed.");
+      const asset = await uploadAsset(file, kind);
       setLessonModal((prev) => ({
         ...prev,
         values: {
           ...prev.values,
-          ...(kind === "VIDEO" ? { videoAssetId: data.asset.id, type: "VIDEO" as const } : { pdfAssetId: data.asset.id }),
+          ...(kind === "VIDEO" ? { videoAssetId: asset.id, type: "VIDEO" as const } : { pdfAssetId: asset.id }),
         },
       }));
     } catch (e) {

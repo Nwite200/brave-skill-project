@@ -22,6 +22,7 @@ const columns = [
       { href: "/contact", label: "Contact us" },
       { href: "/faqs", label: "FAQs" },
       { href: "/download", label: "Android app" },
+      { href: "/intro", label: "Brand film" },
     ],
   },
   {

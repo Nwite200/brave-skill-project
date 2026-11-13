@@ -165,6 +165,8 @@ All endpoints require `ADMIN`/`MASTER_ADMIN`; content endpoints also allow
 | POST | `/admin/content/[resource]` | Create a whitelisted resource |
 | PATCH/DELETE | `/admin/content/[resource]/[id]` | Update or delete |
 | POST | `/admin/uploads` | Multipart upload (`file`, `kind=VIDEO\|PDF\|IMAGE\|APK`) |
+| POST | `/admin/uploads/presign` | Presigned R2 PUT for large files (>70MB) |
+| POST | `/admin/uploads/complete` | Register a directly uploaded R2 object as an asset |
 | POST | `/admin/enrollments` | Grant course access manually |
 | DELETE | `/admin/enrollments?id=` | Revoke an enrolment |
 | POST | `/admin/orders/[id]/refund` | Refund and revoke access |

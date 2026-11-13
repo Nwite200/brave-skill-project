@@ -18,8 +18,14 @@ mobile/android/app/*.jks
 mobile/android/app/*.keystore
 
 qa-shots
+public/app
 tsconfig.tsbuildinfo
 !storage/seed/
 !storage/seed/*
 !storage/seed/
 !storage/seed/*
+
+.open-next
+.wrangler
+.intro-frames-*
+dev.vars

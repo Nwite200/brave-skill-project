@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useRef, useState } from "react";
 import { AlertCircle, ArrowLeft, ImagePlus, Loader2, Save, Upload } from "lucide-react";
+import { uploadAsset } from "@/components/admin/upload";
 
 type Option = { value: string; label: string };
 
@@ -82,15 +83,10 @@ export function CourseForm({
     setUploading(true);
     setError("");
     try {
-      const body = new FormData();
-      body.append("file", file);
-      body.append("kind", "IMAGE");
-      const res = await fetch("/api/admin/uploads", { method: "POST", body });
-      const data = await res.json();
-      if (!res.ok) setError(data.error || "Image upload failed.");
-      else update("thumbnailUrl", data.asset.url);
-    } catch {
-      setError("Network error while uploading the image.");
+      const asset = await uploadAsset(file, "IMAGE");
+      update("thumbnailUrl", asset.url);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Image upload failed.");
     } finally {
       setUploading(false);
     }

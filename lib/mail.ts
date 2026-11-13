@@ -1,39 +1,38 @@
 import "server-only";
 
-import nodemailer from "nodemailer";
 import { env } from "@/lib/env";
 
-let transporter: nodemailer.Transporter | null = null;
-
-function getTransporter() {
-  if (!process.env.SMTP_HOST) return null;
-  if (!transporter) {
-    transporter = nodemailer.createTransport({
-      host: process.env.SMTP_HOST,
-      port: Number(process.env.SMTP_PORT || 587),
-      secure: Number(process.env.SMTP_PORT) === 465,
-      auth: process.env.SMTP_USER
-        ? { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS }
-        : undefined,
-    });
-  }
-  return transporter;
-}
-
+/**
+ * HTTP email delivery (works on Cloudflare Workers and Node).
+ * Set RESEND_API_KEY in production. Without it, messages are logged so local
+ * development and staging remain fully testable.
+ */
 export async function sendMail(input: { to: string; subject: string; html: string; text?: string }) {
-  const transport = getTransporter();
-  if (!transport) {
+  const apiKey = process.env.RESEND_API_KEY;
+  if (!apiKey) {
     console.info(`[mail:dev] to=${input.to} subject="${input.subject}"`);
-    return { delivered: false, reason: "SMTP not configured" };
+    return { delivered: false, reason: "RESEND_API_KEY not configured" };
   }
+
   try {
-    await transport.sendMail({
-      from: process.env.SMTP_FROM || "Brave Skill <no-reply@academy.emyphilltech.com.ng>",
-      to: input.to,
-      subject: input.subject,
-      html: input.html,
-      text: input.text,
+    const response = await fetch("https://api.resend.com/emails", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        from: process.env.RESEND_FROM || process.env.SMTP_FROM || "Brave Skill <no-reply@academy.emyphilltech.com.ng>",
+        to: [input.to],
+        subject: input.subject,
+        html: input.html,
+        text: input.text,
+      }),
     });
+    if (!response.ok) {
+      console.error("[mail] provider rejected the message", response.status, await response.text().catch(() => ""));
+      return { delivered: false, reason: "Provider rejected the message" };
+    }
     return { delivered: true };
   } catch (error) {
     console.error("[mail] delivery failed", error);

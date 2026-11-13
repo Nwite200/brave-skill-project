@@ -2,7 +2,8 @@
 // PostgreSQL. All monetary values are stored in kobo (1 NGN = 100 kobo).
 
 generator client {
-  provider = "prisma-client-js"
+  provider        = "prisma-client-js"
+  previewFeatures = ["driverAdapters"]
 }
 
 datasource db {

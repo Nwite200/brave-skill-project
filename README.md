@@ -21,13 +21,13 @@ Learn. Practice. Build.
 | --- | --- |
 | Web | Next.js 15 (App Router), React 19, TypeScript |
 | Styling | Tailwind CSS v4, custom design tokens |
-| Database | PostgreSQL 16 + Prisma ORM (Cloudflare Hyperdrive at the edge) |
+| Database | Cloudflare D1 + Prisma ORM |
 | Auth | Role-based sessions (JWT in HTTP-only cookies), bcrypt |
 | Payments | Paystack (NGN) + webhook HMAC validation |
 | Documents | `pdf-lib` certificates and receipts |
-| Media | Cloudflare R2 (S3 API) with authorised streaming; local filesystem fallback |
+| Media | Cloudflare R2 (S3 API) with authorised streaming; no production filesystem fallback |
 | Mobile | Flutter 3 (Android) |
-| Deployment | Cloudflare Workers (OpenNext), R2, Hyperdrive, DNS |
+| Deployment | Cloudflare Workers (OpenNext), D1, R2 and Cloudflare DNS |
 
 ---
 
@@ -36,7 +36,7 @@ Learn. Practice. Build.
 ### 1. Requirements
 
 - Node.js 20+ (tested on Node 22)
-- PostgreSQL 15+ (tested on 16)
+- Cloudflare account with D1 and R2 resources
 - npm
 
 ### 2. Install
@@ -49,7 +49,7 @@ cp .env.example .env
 Edit `.env`:
 
 ```env
-DATABASE_URL="postgresql://USER@localhost:5432/braveskill?schema=public"
+CLOUDFLARE_D1_TOKEN="..."\nCLOUDFLARE_ACCOUNT_ID="..."\nCLOUDFLARE_DATABASE_ID="..."
 AUTH_SECRET="<openssl rand -base64 48>"
 NEXT_PUBLIC_SITE_URL="http://localhost:3000"
 ```

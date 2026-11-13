@@ -5,9 +5,13 @@ the **live database**, runs authenticated tools, escalates to humans with a tick
 and speaks through a natural voice interface.
 
 It is not a prerecorded phone menu. Every conversation is grounded in current courses,
-payments, progress and approved knowledge. When a language-model key is configured,
-the agent uses tool-calling for natural reasoning; without a key, the built-in
-knowledge engine still performs intent detection, retrieval and the same tools.
+payments, progress and approved knowledge.
+
+**It is free.** On Cloudflare, reasoning runs on **Cloudflare Workers AI** using the
+binding and its free daily allocation — no OpenAI or Gemini key needed. Locally and on
+Node hosting, the built-in grounded engine answers from the same live data. Voice uses
+the browser or Android system speech engine, which is also free. Optional paid
+providers remain supported but are never required.
 
 ---
 
@@ -104,26 +108,37 @@ Rules enforced in the prompt and in code:
 
 ---
 
-## 5. Language model providers
+## 5. Free AI reasoning
 
-Set **one** of these in the environment:
+The default provider costs nothing extra:
 
-| Variable | Effect |
+| Environment | Provider |
 | --- | --- |
-| `OPENAI_API_KEY` | Full tool-calling conversation, optional server voice and Whisper |
-| `GEMINI_API_KEY` | Grounded generation; private intents are handled locally |
-| none | Local knowledge engine with live tools and retrieval |
+| Cloudflare Workers | **Cloudflare Workers AI** via the `AI` binding; free daily allocation |
+| Local development / Node VPS | Built-in grounded engine — no key, no network cost |
+| Optional legacy | `OPENAI_API_KEY` / `GEMINI_API_KEY` if the owner ever wants them |
 
-Optional:
+Workers AI is configured in `wrangler.jsonc`:
 
-```env
-AGENT_MODEL=gpt-4.1-mini          # or gemini-2.5-flash
-AGENT_TTS_MODEL=gpt-4o-mini-tts
-AGENT_STT_MODEL=whisper-1
+```jsonc
+"ai": { "binding": "AI" },
+"vars": { "AGENT_CF_MODEL": "@cf/meta/llama-3.1-8b-instruct" }
 ```
 
-The provider automatically falls back to the local engine if an API call fails, so
-the widget never goes silent.
+No secret is needed. If the free quota is exhausted or the model is unavailable, the
+agent automatically falls back to the grounded engine, so the assistant never goes
+silent.
+
+Optional variables (not required):
+
+```env
+AGENT_CF_MODEL=@cf/meta/llama-3.1-8b-instruct
+# OPENAI_API_KEY=...   # optional
+# GEMINI_API_KEY=...   # optional
+```
+
+Price, discount, payment, progress and certificate questions are answered by
+deterministic tools so an AI model can never invent a price or payment status.
 
 ---
 
@@ -136,8 +151,8 @@ Website:
   then any English voice;
 - microphone permission is requested explicitly; denial switches to text;
 - speaking is cancelled the moment the user starts the microphone or clicks Stop;
-- server voice is used when `OPENAI_API_KEY` is present and the admin selects a
-  non-browser voice; otherwise browser speech is used;
+- voice is always free: the browser/Android system speech engine is used by default;
+- selecting Nigerian or British English changes the voice preference, not the cost;
 - mute, stop, end and replay controls are always visible;
 - live interim transcript and a listening indicator.
 
@@ -258,7 +273,7 @@ Authenticated status uses the normal `bs_session` cookie; the Android app forwar
 | --- | --- |
 | Widget missing | `ai.enabled` is false or bootstrap failed; check `/api/agent/bootstrap` |
 | “Knowledge engine” answers | No `OPENAI_API_KEY` / `GEMINI_API_KEY`; local engine is active by design |
-| No voice output | Browser has no speech synthesis, or the user muted; server voice requires a key |
+| No voice output | Browser/device has no speech synthesis, or the user muted; no API is required |
 | Microphone unavailable | Browser permission, HTTPS requirement, or unsupported browser; use text |
 | Wrong price | Prices come from the course table; correct the course in admin |
 | Payment status wrong | Never cached; the tool reads the order. Verify the reference belongs to the signed-in account |

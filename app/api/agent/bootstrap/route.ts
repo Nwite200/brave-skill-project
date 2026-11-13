@@ -3,6 +3,7 @@ import { json, route } from "@/lib/api";
 import { getSettings } from "@/lib/settings";
 import { getSessionUser } from "@/lib/auth";
 import { llmProvider } from "@/lib/agent/llm";
+import { getCloudflareAI } from "@/lib/agent/cloudflare";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -10,6 +11,7 @@ export const dynamic = "force-dynamic";
 export const GET = route(async (_req: NextRequest) => {
   const [settings, user] = await Promise.all([getSettings(), getSessionUser()]);
   const enabled = settings["ai.enabled"] === "true";
+  const cloudflareAi = await getCloudflareAI();
   return json({
     ok: true,
     enabled,
@@ -26,7 +28,7 @@ export const GET = route(async (_req: NextRequest) => {
     widgetPosition: settings["ai.widgetPosition"] || "right",
     user: user ? { name: user.name, email: user.email } : null,
     serverVoice: Boolean(process.env.OPENAI_API_KEY),
-    provider: llmProvider() === "local" ? "knowledge-engine" : "language-model",
+    provider: cloudflareAi ? "cloudflare-free-ai" : llmProvider() === "local" ? "grounded-free-engine" : "optional-language-model",
     suggestions: [
       "What courses do you offer?",
       "How much is the solar course?",

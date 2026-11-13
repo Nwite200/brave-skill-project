@@ -2,9 +2,10 @@ import "server-only";
 
 import { db } from "@/lib/db";
 import { getSettings } from "@/lib/settings";
-import { retrieveKnowledge, snippetsToContext } from "@/lib/agent/knowledge";
+import { retrieveKnowledge, snippetsToContext, searchCoursesForAgent } from "@/lib/agent/knowledge";
 import { answerLocally, type LocalAgentContext } from "@/lib/agent/local";
 import { AGENT_SYSTEM_PROMPT, generateWithGemini, generateWithOpenAI, llmProvider } from "@/lib/agent/llm";
+import { generateWithCloudflareAI, getCloudflareAI } from "@/lib/agent/cloudflare";
 import type { SessionUser } from "@/lib/auth";
 
 export type AgentRunInput = {
@@ -99,7 +100,12 @@ export async function runAgent(input: AgentRunInput): Promise<AgentRunResult> {
   });
 
   const context = parseContext(conversation.context);
-  const provider = llmProvider();
+  const cloudflareAi = await getCloudflareAI();
+  const provider: "cloudflare" | "openai" | "gemini" | "local" = cloudflareAi
+    ? "cloudflare"
+    : llmProvider();
+  const needsDeterministicAnswer =
+    privateIntent.test(input.message) || /(price|cost|how much|fee|discount|coupon|promo|refund)/i.test(input.message);
   let result: {
     reply: string;
     intent: string;
@@ -122,12 +128,50 @@ export async function runAgent(input: AgentRunInput): Promise<AgentRunResult> {
     }).then((answer) => ({ ...answer, escalated: Boolean(answer.escalated), provider: "local" }));
 
   try {
-    if (provider === "local") {
+    if (provider === "local" || (provider === "cloudflare" && needsDeterministicAnswer)) {
       result = await local();
     } else if (provider === "gemini" && privateIntent.test(input.message)) {
       // Private account data is resolved locally so it is never sent to a
       // provider without tool scoping.
       result = await local();
+    } else if (provider === "cloudflare") {
+      const snippets = await retrieveKnowledge(input.message, 5);
+      const courses = await searchCoursesForAgent({});
+      const courseFacts = courses
+        .map((course: { title: string; category: string; level: string; priceLabel: string; duration: string; lessons: number }) => `- ${course.title} (${course.category}, ${course.level}): ${course.priceLabel}, ${course.duration}, ${course.lessons} lessons.`)
+        .join("\n");
+      const system = `${AGENT_SYSTEM_PROMPT}
+
+Academy facts verified from the live catalogue:
+${courseFacts || "The catalogue is temporarily empty."}
+
+Approved knowledge excerpts:
+${snippetsToContext(snippets) || "No matching documents were retrieved."}
+
+Configuration:
+- Assistant name: ${settings["ai.name"]}
+- Tone: ${settings["ai.tone"]}
+- Additional instructions: ${settings["ai.instructions"]}
+- Student context: ${input.user ? `${input.user.name.split(" ")[0]} is signed in.` : "Anonymous visitor."}
+- Website: https://academy.emyphilltech.com.ng
+
+This reasoning runs on Cloudflare Workers AI at no external API cost. If a question requires payment status, enrolment status, progress or certificate records, the platform handles it locally; do not guess.`;
+
+      const cloudResult = await generateWithCloudflareAI({
+        ai: cloudflareAi,
+        system,
+        history,
+        message: input.message,
+      });
+      result = {
+        reply: cloudResult.reply,
+        intent: "ai",
+        suggestions: defaultSuggestions(input.message),
+        toolsUsed: ["cloudflare_workers_ai"],
+        escalated: false,
+        context: { ...context, lastIntent: "ai" },
+        provider: cloudResult.provider,
+      };
     } else {
       const snippets = await retrieveKnowledge(input.message, 5);
       const system = `${AGENT_SYSTEM_PROMPT}

@@ -8,6 +8,9 @@
     "directory": ".open-next/assets",
     "binding": "ASSETS"
   },
+  "ai": {
+    "binding": "AI"
+  },
   "observability": {
     "enabled": true,
     "head_sampling_rate": 1
@@ -21,6 +24,7 @@
     "NEXT_PUBLIC_WHATSAPP": "2348000000000",
     "R2_BUCKET": "brave-skill-media",
     "R2_REGION": "auto",
+    "AGENT_CF_MODEL": "@cf/meta/llama-3.1-8b-instruct",
     "RESEND_FROM": "Brave Skill <no-reply@academy.emyphilltech.com.ng>"
   },
   "routes": [

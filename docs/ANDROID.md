@@ -174,6 +174,14 @@ Payments policy before each submission, as rules evolve.
 
 ---
 
+## 6b. Biometric app lock (free)
+
+The app uses `local_auth` to call **Android's own BiometricPrompt / device
+credential**. This is an on-device operating-system API: there is no fingerprint
+service subscription, no external API key and no per-user cost. Enrolment and
+verification happen entirely on the phone; Brave Skill never receives fingerprint
+data. Users can enable or disable the lock from Profile.
+
 ## 7. Permissions
 
 | Permission | Why |
@@ -182,6 +190,7 @@ Payments policy before each submission, as rules evolve.
 | `ACCESS_NETWORK_STATE` | Connection handling |
 | `POST_NOTIFICATIONS` | Reserved for future course/payment alerts; no push is sent today |
 | `RECORD_AUDIO` | Voice questions to the Brave AI Assistant; audio is processed by the device speech service |
+| `USE_BIOMETRIC` | Optional on-device app lock using the phone's own biometric prompt; no external API |
 
 No location, contacts, camera, microphone, SMS or background tracking.
 

@@ -133,12 +133,15 @@ export function VoiceAgent({ offsetClass = "bottom-5" }: { offsetClass?: string 
     if (typeof window === "undefined" || !("speechSynthesis" in window)) return null;
     const voices = window.speechSynthesis.getVoices();
     if (!voices.length) return null;
-    const preferred =
-      voices.find((v) => v.lang?.toLowerCase().startsWith("en-ng")) ||
-      voices.find((v) => /google uk english female|microsoft (aria|libby|sonia)|samantha|zira/i.test(v.name)) ||
-      voices.find((v) => v.lang?.toLowerCase().startsWith("en-gb") && /female|aria|libby|sonia|google/i.test(v.name)) ||
-      voices.find((v) => v.lang?.toLowerCase().startsWith("en-gb")) ||
-      voices.find((v) => v.lang?.toLowerCase().startsWith("en"));
+    const preference = config?.voice?.name || "auto";
+    const ordered = preference === "en-GB" ? ["en-gb", "en-ng", "en"] : preference === "browser" ? ["en"] : ["en-ng", "en-gb", "en"];
+    let preferred: SpeechSynthesisVoice | undefined;
+    for (const lang of ordered) {
+      preferred =
+        voices.find((v) => v.lang?.toLowerCase().startsWith(lang) && /female|aria|libby|sonia|google|samantha|zira/i.test(v.name)) ||
+        voices.find((v) => v.lang?.toLowerCase().startsWith(lang));
+      if (preferred) break;
+    }
     return preferred || voices[0];
   }
 

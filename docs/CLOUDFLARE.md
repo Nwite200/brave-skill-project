@@ -22,6 +22,9 @@ Why this shape:
 - **Hyperdrive** pools and accelerates connections to Postgres from the edge.
 - **R2** stores course media privately; it is served only through authorised
   API routes, with presigned direct uploads for large videos.
+- **Workers AI** provides the assistant's reasoning on its free daily allocation,
+  with no external API key; the grounded engine is the fallback. This keeps the AI
+  assistant free to operate within Cloudflare's allowance.
 - **Cloudflare DNS/WAF/Access** provide the domain, TLS, rate limiting and an
   extra identity gate for `/admin`.
 
@@ -120,8 +123,7 @@ npx wrangler secret put AUTH_SECRET           # openssl rand -base64 48
 npx wrangler secret put PAYSTACK_PUBLIC_KEY
 npx wrangler secret put PAYSTACK_SECRET_KEY
 npx wrangler secret put RESEND_API_KEY
-npx wrangler secret put OPENAI_API_KEY        # optional: LLM + premium voice
-npx wrangler secret put GEMINI_API_KEY        # optional alternative
+# The AI assistant needs NO key: Workers AI uses the free binding in wrangler.jsonc.
 npx wrangler secret put R2_ACCOUNT_ID
 npx wrangler secret put R2_ACCESS_KEY_ID
 npx wrangler secret put R2_SECRET_ACCESS_KEY
@@ -276,6 +278,7 @@ deployment.
 | Worker bundle size | Requires Workers Paid; avoid adding large SDKs |
 | Postgres connections | Hyperdrive pools; Prisma adapter capped at 5 connections per isolate |
 | No local filesystem | `lib/storage.ts` switches to R2 when `R2_*` is configured |
+| Workers AI free quota | The assistant falls back to the grounded engine if quota is exhausted |
 | No SMTP sockets | Email uses Resend's HTTP API (`lib/mail.ts`) |
 
 ---

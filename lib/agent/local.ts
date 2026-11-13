@@ -471,10 +471,11 @@ export async function answerLocally(input: {
       const outcomes = (data?.outcomes as string[]) || [];
       const requirements = (data?.requirements as string[]) || [];
       const modules = (data?.modules as { title: string; lessons: number }[]) || [];
+      const article = /^[aeiou]/i.test(course.level) ? "an" : "a";
       const parts = [
-        `${course.title} is a ${course.level.toLowerCase()} programme in ${course.category.toLowerCase()}, lasting ${course.duration} across ${course.lessons} lessons.`,
-        outcomes.length ? `You'll learn to ${outcomes.slice(0, 3).map((o) => o.replace(/\.$/, "").toLowerCase()).join(", ")}.` : "",
-        requirements.length ? `You'll need ${requirements.slice(0, 3).join(", ")}.` : "No prior experience is required.",
+        `${course.title} is ${article} ${course.level.toLowerCase()} programme in ${course.category}, lasting ${course.duration} across ${course.lessons} lessons.`,
+        outcomes.length ? `The programme covers ${outcomes.slice(0, 3).map((o) => o.replace(/\.$/, "")).join("; ")}.` : "",
+        requirements.length ? `Requirements include ${requirements.slice(0, 3).join(", ")}.` : "No prior experience is required.",
         modules.length ? `The curriculum starts with ${modules.slice(0, 2).map((m) => m.title).join(" and ")}, then moves into practical installation and assessment.` : "",
       ].filter(Boolean);
       return {

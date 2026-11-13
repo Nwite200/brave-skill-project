@@ -360,11 +360,10 @@ export function AgentConsole({
               <div>
                 <label className="label">Voice</label>
                 <select className="field h-10 text-[12px]" value={settings["ai.voice"]} onChange={(e) => set("ai.voice", e.target.value)}>
-                  <option value="auto">Auto (natural female)</option>
-                  <option value="alloy">Alloy</option>
-                  <option value="shimmer">Shimmer</option>
-                  <option value="nova">Nova</option>
-                  <option value="browser">Browser only</option>
+                  <option value="auto">Auto (device voice)</option>
+                  <option value="en-NG">Nigerian English</option>
+                  <option value="en-GB">British English</option>
+                  <option value="browser">Device default</option>
                 </select>
               </div>
               <div>
@@ -392,8 +391,8 @@ export function AgentConsole({
           <div className="grid gap-3 sm:grid-cols-2">
             <div className="rounded-xl border border-white/[0.07] bg-[#0A0C15] p-4">
               <p className="text-[9px] uppercase tracking-[0.16em] text-[#6F7C90]">Speech</p>
-              <p className="mt-1.5 text-[11.5px] text-white">{process.env.NEXT_PUBLIC_AGENT_TTS === "false" ? "Browser only" : "Browser + optional server voice"}</p>
-              <p className="mt-1 text-[9.5px] leading-relaxed text-[#5F6B7E]">The website uses Web Speech for listening and speech synthesis. Adding an OpenAI key enables premium server voice and Whisper transcription fallback.</p>
+              <p className="mt-1.5 text-[11.5px] text-white">Free device voice and on-device recognition</p>
+              <p className="mt-1 text-[9.5px] leading-relaxed text-[#5F6B7E]">No speech API is required or billed. Android uses the system speech engine; browsers use Web Speech. Cloudflare Workers AI powers free reasoning on the deployed Worker, with the grounded engine as fallback.</p>
             </div>
             <div className="rounded-xl border border-white/[0.07] bg-[#0A0C15] p-4">
               <p className="text-[9px] uppercase tracking-[0.16em] text-[#6F7C90]">Privacy</p>

@@ -27,6 +27,8 @@ the app on launch and after 30 s in the background, and falls back to the device
 PIN/pattern. Signing out turns it off. Run `flutter pub get` after pulling.
 
 The app is a consumption experience for courses purchased on the academy website.
-It does not link to checkout or process payments.
+It does not link to checkout or process payments. The Brave AI Assistant uses the
+device's free speech engine, and the biometric app lock uses Android's on-device
+BiometricPrompt — neither requires a paid API.
 
 © Emyphill-Tech Global Solutions Limited.

@@ -128,6 +128,7 @@ screenshots after major UI changes; keep personal data out of store images.
 | Can users request deletion? | Yes, via support@academy.emyphilltech.com.ng |
 | Data collected for advertising? | No |
 | Data collected for analytics? | No third-party analytics |
+| AI assistant | Conversation text is processed to answer questions. Voice audio is handled by the device speech engine; the app does not store raw audio. The assistant uses Cloudflare Workers AI's free allocation on the deployed Worker. |
 | Purpose | App functionality, account management, education records |
 
 > Review the answers against the final build. If analytics or crash reporting is added

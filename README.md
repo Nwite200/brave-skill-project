@@ -9,7 +9,7 @@ Learn. Practice. Build.
 - **Student portal** — dashboard, progress, video/PDF lessons, quizzes, timed final exams, certificates, payment history, notifications, settings.
 - **Administrator console** (`/admin`) — courses, curriculum, categories, students, instructors, transactions, revenue, examinations, certificates, discount codes, announcements, website content, reports, settings, audit logs.
 - **Payments** — Paystack initialise + server-side verification + signed webhook fulfilment + refunds. A guarded local test checkout is included for development.
-- **Brave AI Assistant** — voice and text agent grounded in the live catalogue, payments, progress and approved knowledge, with human escalation and an admin console.
+- **Brave AI Assistant (free)** — voice and text agent grounded in the live catalogue, payments, progress and approved knowledge. Uses Cloudflare Workers AI's free allocation or the built-in grounded engine; browser/device speech is free. Includes human escalation and an admin console.
 - **Media security** — videos, PDFs and APKs live outside `public/`, streamed only after an entitlement check, with HTTP Range support.
 - **Android app** — Flutter client in [`mobile/`](mobile/README.md) sharing the same API, ready to build as an APK or Android App Bundle.
 

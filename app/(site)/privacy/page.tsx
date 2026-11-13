@@ -66,11 +66,17 @@ const sections = [
           by your browser, operating system or a configured speech provider.
         </p>
         <p>
-          Brave Skill does not store raw microphone audio. If a premium server voice is
-          enabled, the text of the reply is sent to the speech provider to generate audio;
-          the text you speak is handled by the selected speech-recognition service. Do not
-          share passwords, PINs, one-time codes or card details with the assistant — it is
-          designed never to ask for them.
+          Brave Skill does not store raw microphone audio. Speech recognition and voice
+          playback are performed by your browser or device speech engine. On Cloudflare,
+          assistant reasoning uses Cloudflare Workers AI under its free allocation; on
+          other hosting it uses the academy's built-in grounded engine. No paid AI or voice
+          API is required. Do not share passwords, PINs, one-time codes or card details
+          with the assistant — it is designed never to ask for them.
+        </p>
+        <p>
+          If you enable the optional Android app lock, fingerprint or face verification is
+          performed entirely by your phone's operating system. Brave Skill does not receive
+          or store biometric data.
         </p>
         <p>
           Conversations are used to answer your question, improve the assistant, review

@@ -295,7 +295,9 @@ use them for accounting and monthly reviews.
 - **Settings** — enable/disable, assistant name, greeting, tone, voice, speech rate,
   escalation email, anonymous access and additional instructions. The protected
   system rules (no invented prices, no private data leaks, no password requests)
-  cannot be overridden.
+  cannot be overridden. Speech uses the free device/browser engine; reasoning uses
+  Cloudflare Workers AI's free allocation or the built-in grounded engine. No API key
+  is required.
 - **Knowledge** — add approved documents for policies, admissions or troubleshooting.
   Courses, FAQs and announcements are indexed automatically. Publishing a new course
   makes it available to the assistant immediately.

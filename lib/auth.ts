@@ -88,18 +88,24 @@ export const getSessionUser = cache(async (): Promise<SessionUser | null> => {
   const payload = await readSessionToken(token);
   if (!payload) return null;
 
-  const user = await db.user.findUnique({
-    where: { id: payload.userId },
-    select: {
-      id: true,
-      name: true,
-      email: true,
-      role: true,
-      status: true,
-      avatarUrl: true,
-      tokenVersion: true,
-    },
-  });
+  let user;
+  try {
+    const user = await db.user.findUnique({
+      where: { id: payload.userId },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        role: true,
+        status: true,
+        avatarUrl: true,
+        tokenVersion: true,
+      },
+    });
+  } catch {
+    // Public frontend must remain available before D1 is provisioned.
+    return null;
+  }
   if (!user || user.status !== "ACTIVE") return null;
   if (user.tokenVersion !== payload.tokenVersion) return null;
   return user;

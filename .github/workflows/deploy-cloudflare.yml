@@ -25,6 +25,27 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm install --ignore-scripts
+      - name: Ensure Cloudflare D1 database exists
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          set -euo pipefail
+          test -n "$CLOUDFLARE_API_TOKEN"
+          test -n "$CLOUDFLARE_ACCOUNT_ID"
+          API="https://api.cloudflare.com/client/v4/accounts/$CLOUDFLARE_ACCOUNT_ID/d1/database"
+          LIST="$(curl --fail-with-body --silent --show-error -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" "$API")"
+          DB_ID="$(printf '%s' "$LIST" | jq -r '.result[]? | select(.name == "brave-skill-db") | .uuid' | head -n 1)"
+          if [ -z "$DB_ID" ]; then
+            echo "Creating Cloudflare D1 database brave-skill-db..."
+            CREATED="$(curl --fail-with-body --silent --show-error -X POST "$API" -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" -H "Content-Type: application/json" --data '{"name":"brave-skill-db"}')"
+            DB_ID="$(printf '%s' "$CREATED" | jq -r '.result.uuid // empty')"
+          else
+            echo "Reusing existing Cloudflare D1 database."
+          fi
+          test -n "$DB_ID" || { echo "Could not obtain D1 database ID"; exit 1; }
+          DB_ID="$DB_ID" node -e 'const fs=require("fs"); const p="wrangler.jsonc"; const s=fs.readFileSync(p,"utf8"); if (!s.includes("REPLACE_WITH_D1_DATABASE_ID") && !s.includes(process.env.DB_ID)) throw new Error("D1 database ID placeholder was not found"); fs.writeFileSync(p,s.replace("REPLACE_WITH_D1_DATABASE_ID",process.env.DB_ID));'
+          echo "D1 database is ready for deployment."
       - name: Generate Prisma Client
         run: npx prisma generate
       - name: Generate initial D1 migration

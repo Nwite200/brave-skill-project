@@ -174,7 +174,7 @@ settings, and the main administrator screens. Output: `qa-shots/`.
 
 ```bash
 # 1. Start the app
-npm run build && npm start
+npm run build:next && npm start
 
 # 2. In another terminal
 psql -d braveskill -c 'delete from "RateLimitBucket";'   # reset test rate limits
@@ -190,7 +190,7 @@ development can exceed the test timeouts.
 
 ## Final regression — 13 November 2026
 
-Production build (`npm run build && npm start`) against a clean seed:
+Production build (`npm run build:next && npm start`) against a clean seed:
 
 | Check | Result |
 | --- | --- |

@@ -168,7 +168,7 @@ Logs: `journalctl -u brave-skill -f`
 
 ### Alternative: standalone server
 
-`npm run build` produces `.next/standalone` when `NEXT_OUTPUT_STANDALONE=1`.
+`npm run build:next` produces `.next/standalone` when `NEXT_OUTPUT_STANDALONE=1`.
 Copy `.next/static` and `public` into it, then run `node server.js`. The included
 `Dockerfile` does this automatically.
 

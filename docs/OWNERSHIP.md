@@ -60,7 +60,7 @@ cd brave-skill-project
 npm ci
 cp .env.example .env    # fill in production values
 npx prisma migrate deploy
-npm run build
+npm run build:next
 npm start
 ```
 

@@ -69,7 +69,7 @@ generates branded PDF field guides. Re-run it any time to reset demo data.
 
 ```bash
 npm run dev      # http://localhost:3000
-# or
+# or, for a production-like local run
 npm run build && npm start
 ```
 
@@ -113,8 +113,8 @@ Node/VPS fallback: [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md).
 | Script | Description |
 | --- | --- |
 | `npm run dev` | Development server |
-| `npm run build` | Prisma generate + production build |
-| `npm start` | Start the production server |
+| `npm run build` | Prisma generate + Next.js production build (Node/VPS, Docker) |
+| `npm start` | Start the Next.js production server |
 | `npm run typecheck` | TypeScript validation |
 | `npm run db:push` | Sync schema without a migration (development) |
 | `npm run db:migrate` | Create a development migration |
@@ -123,7 +123,8 @@ Node/VPS fallback: [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md).
 | `npm run db:reset` | Reset schema and re-seed (destructive) |
 | `npm run db:backup` | Compressed PostgreSQL backup with retention |
 | `npm run db:restore -- <file>` | Restore a backup (asks for confirmation) |
-| `npm run cf:build` | Build the OpenNext Cloudflare Worker (runs in CI/Pages) |
+| `npm run cf:build` | Prisma generate + OpenNext Cloudflare Worker build (runs in CI/Pages) |
+| `npm run build:worker` | Same Worker build, without the `cf:` alias |
 | `npm run cf:preview` | Preview the Worker locally (Wrangler) |
 | `npm run cf:deploy` | Deploy to Cloudflare Workers |
 | `npm run intro:render` | Render the cinematic brand film from the deterministic canvas |

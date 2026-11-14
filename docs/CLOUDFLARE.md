@@ -149,6 +149,23 @@ environment (GitHub Actions or `.env.cloudflare`) as well as in `wrangler.jsonc`
 
 ## 5. Build and deploy
 
+### Cloudflare Workers Builds (connected Git repository)
+
+| Setting | Value |
+| --- | --- |
+| Build command | `npm run build` |
+| Deploy command | `npx wrangler deploy` |
+| Node version | 22 or newer |
+
+`npm run build` invokes OpenNext, which runs `npm run build:next` for the Next.js
+build and then produces `.open-next/worker.js`, `.open-next/assets` and the compiled
+OpenNext config required by Wrangler.
+
+For a normal Node/VPS build use `npm run build:next`; it does not create the Worker
+bundle.
+
+### Manual deployment
+
 ```bash
 npm ci
 npx prisma generate
